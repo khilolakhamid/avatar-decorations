@@ -2,11 +2,12 @@
 //   node scripts/package-release.mjs halloween-pumpkin
 //
 // 1. builds and tests the whole project (stops on any failure);
-// 2. copies the decoration + the shared code it uses into
+// 2. copies the decoration + the shared files it actually uses into
 //    releases/<id>/<version>/ (never overwrites an existing version);
 // 3. builds and tests the copy on its own;
 // 4. writes releases/<id>-<version>.zip.
 // Demo page, reference images and the avatar placeholder are never copied.
+import * as esbuild from 'esbuild';
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -34,7 +35,17 @@ run(root, 'scripts/test.mjs');
 mkdirSync(out, { recursive: true });
 const copy = (from, to = from) => cpSync(join(root, from), join(out, to), { recursive: true });
 copy(`src/decorations/${id}`);
-copy('src/shared');
+// only the shared files this decoration really uses (found by the bundler)
+const { metafile } = await esbuild.build({
+  entryPoints: [join(root, `src/decorations/${id}/index.ts`)],
+  bundle: true,
+  write: false,
+  metafile: true,
+  format: 'esm',
+  absWorkingDir: root,
+  logLevel: 'silent',
+});
+for (const input of Object.keys(metafile.inputs).filter((f) => f.startsWith('src/shared/'))) copy(input);
 copy(`src/decorations/${id}/README.md`, 'README.md');
 copy(`src/decorations/${id}/STATUS.md`, 'STATUS.md');
 copy('scripts/release/build.mjs', 'scripts/build.mjs');

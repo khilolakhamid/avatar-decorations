@@ -2,7 +2,9 @@
 //   node scripts/build.mjs          → embeds SVGs, then builds
 //                                      dist/halloween-pumpkin/index.js   (the decoration alone, ES module)
 //                                      dist/halloween-pumpkin/index.d.ts (types)
-//                                      dist/demo.html                    (demo page, one self-contained file)
+//                                      dist/demo.html                    (Halloween Pumpkin demo page)
+//                                      dist/ghost-orbit/index.js         (Ghost Orbit, the decoration alone)
+//                                      dist/ghost-orbit-demo.html        (Ghost Orbit demo page)
 //   node scripts/build.mjs --serve  → same, rebuilds on change and serves the demo at http://localhost:5173
 import * as esbuild from 'esbuild';
 import { execFileSync } from 'node:child_process';
@@ -31,11 +33,11 @@ function embedAssets() {
 }
 
 /** Decoration only — what another project would copy or import. */
-async function buildLibrary() {
+async function buildLibrary(id = 'halloween-pumpkin') {
   await esbuild.build({
     ...common,
-    entryPoints: [join(root, 'src/decorations/halloween-pumpkin/index.ts')],
-    outfile: join(libDir, 'index.js'),
+    entryPoints: [join(root, `src/decorations/${id}/index.ts`)],
+    outfile: join(root, `dist/${id}/index.js`),
     format: 'esm',
     minify: true,
   });
@@ -69,26 +71,31 @@ function buildTypes() {
 }
 
 /** Demo page: template + bundled script inlined into ONE html file. */
-async function buildDemo() {
+async function buildDemo(dir = 'src/demo', out = 'dist/demo.html') {
   const result = await esbuild.build({
     ...common,
-    entryPoints: [join(root, 'src/demo/main.ts')],
+    entryPoints: [join(root, dir, 'main.ts')],
     format: 'iife',
     minify: true,
     write: false,
   });
   const js = result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
-  const template = readFileSync(join(root, 'src/demo/template.html'), 'utf8');
-  writeFileSync(join(root, 'dist/demo.html'), `${template}\n<script>${js}</script>\n`);
+  const template = readFileSync(join(root, dir, 'template.html'), 'utf8');
+  writeFileSync(join(root, out), `${template}\n<script>${js}</script>\n`);
 }
 
 async function buildAll({ types = true } = {}) {
   const t = Date.now();
   embedAssets();
-  await Promise.all([buildLibrary(), buildDemo()]);
+  await Promise.all([
+    buildLibrary('halloween-pumpkin'),
+    buildDemo(),
+    buildLibrary('ghost-orbit'),
+    buildDemo('src/demo/ghost-orbit', 'dist/ghost-orbit-demo.html'),
+  ]);
   if (types) buildTypes();
   console.log(
-    `built in ${Date.now() - t} ms → dist/halloween-pumpkin/index.js${types ? ', index.d.ts' : ''}, dist/demo.html`,
+    `built in ${Date.now() - t} ms → dist/halloween-pumpkin/index.js${types ? ', index.d.ts' : ''}, dist/demo.html, dist/ghost-orbit/index.js, dist/ghost-orbit-demo.html`,
   );
 }
 
@@ -104,7 +111,8 @@ if (serve) {
   });
   createServer((req, res) => {
     res.setHeader('content-type', 'text/html; charset=utf-8');
+    const page = req.url?.startsWith('/ghost-orbit') ? 'dist/ghost-orbit-demo.html' : 'dist/demo.html';
     // the template has no <html>/<head>; browsers handle that, but give a proper doctype locally
-    res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${readFileSync(join(root, 'dist/demo.html'), 'utf8')}`);
-  }).listen(5173, () => console.log('Demo: http://localhost:5173'));
+    res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${readFileSync(join(root, page), 'utf8')}`);
+  }).listen(5173, () => console.log('Demo: http://localhost:5173 (Halloween Pumpkin), http://localhost:5173/ghost-orbit'));
 }

@@ -4,9 +4,12 @@
 
 ## Декорации
 
-| Декорация | Исходники | Утверждённая версия | Веб | Telegram TGS |
-|---|---|---|---|---|
-| Halloween Pumpkin | `src/decorations/halloween-pumpkin/` | `releases/halloween-pumpkin/1.0.0/` | утверждена 28.10.2026 | не экспортирован |
+| Декорация | id | Исходники | Утверждённая версия | Подключение | Веб | Telegram TGS |
+|---|---|---|---|---|---|---|
+| Halloween Pumpkin | `halloween-pumpkin` | `src/decorations/halloween-pumpkin/` | `releases/halloween-pumpkin/1.0.0/` | `mountHalloweenPumpkin()` | утверждена 28.10.2026 | не экспортирован |
+| Ghost Orbit | `ghost-orbit` | `src/decorations/ghost-orbit/` | `releases/ghost-orbit/1.0.0/` | `mountGhostOrbit()` | утверждена 28.10.2026 | не экспортирован |
+
+Декорации полностью независимы: у каждой свои векторы, анимация, тесты и выпуск. Ни одна не импортирует другую, и каждую можно подключить без остальных.
 
 ## Структура
 
@@ -14,19 +17,26 @@
 avatar-decorations/
 ├── src/
 │   ├── decorations/                 одна папка = одна декорация
-│   │   └── halloween-pumpkin/
-│   │       ├── assets/              оригинальные SVG (не редактировать) + sources.generated.ts
-│   │       ├── component/           координаты, сборка SVG, класс компонента
-│   │       ├── animation/           ключевые кадры и логика анимации
+│   │   ├── halloween-pumpkin/
+│   │   │   ├── assets/              оригинальные SVG (не редактировать) + sources.generated.ts
+│   │   │   ├── component/           координаты, сборка SVG, класс компонента
+│   │   │   ├── animation/           ключевые кадры и логика анимации
+│   │   │   ├── index.ts             публичный интерфейс
+│   │   │   └── README.md, STATUS.md документация и статус версии
+│   │   └── ghost-orbit/
+│   │       ├── assets/              оригинальные SVG ghost, face + sources.generated.ts
+│   │       ├── component/           орбита, движение (motion.ts), сборка SVG, класс компонента
 │   │       ├── index.ts             публичный интерфейс
-│   │       └── README.md, STATUS.md документация и статус версии
+│   │       └── README.md, STATUS.md
 │   ├── shared/                      общий движок анимации и SVG-инструменты
-│   ├── demo/                        демо-страница разработчика (серый аватар, кнопки) — не входит в компоненты
+│   ├── demo/                        демо-страницы разработчика (серый аватар, кнопки) — не входят в компоненты
+│   │   └── ghost-orbit/             демо Ghost Orbit (корень demo/ — Halloween Pumpkin)
 │   └── types/                       тип для .jpg (только демо)
 ├── releases/                        утверждённые версии, только чтение
-│   └── halloween-pumpkin/1.0.0/     готовый пакет: dist/, исходники, тесты, документация
+│   ├── halloween-pumpkin/1.0.0/     готовый пакет: dist/, исходники, тесты, документация
+│   └── ghost-orbit/1.0.0/           готовый пакет Ghost Orbit
 ├── tests/                           автотесты (npm test)
-├── reference/                       материалы: референс композиции, требования TGS (только для демо и проверки)
+├── reference/                       материалы Halloween Pumpkin: референс композиции, требования TGS
 ├── scripts/                         сборка, встраивание SVG, тесты, выпуск версий
 ├── package.json, tsconfig*.json     настройки сборки
 └── .gitignore, .gitattributes
@@ -40,8 +50,8 @@ avatar-decorations/
 
 ```bash
 npm install                                  # esbuild и TypeScript, только для разработки
-npm run dev                                  # демо на http://localhost:5173
-npm run build                                # dist/halloween-pumpkin/index.js + index.d.ts, dist/demo.html
+npm run dev                                  # демо: http://localhost:5173 (Halloween Pumpkin), /ghost-orbit (Ghost Orbit)
+npm run build                                # dist/<id>/index.js для каждой декорации + демо-страницы
 npm test                                     # автотесты
 npm run typecheck                            # проверка типов
 npm run release -- <id-декорации>            # выпуск утверждённой версии в releases/
@@ -63,16 +73,23 @@ npm run release -- <id-декорации>            # выпуск утвер�
 3. Добавить анимацию (`animation/timeline.ts`), тесты (`tests/<id>.test.ts`), документацию.
 4. После утверждения: версия `1.0.0` в `index.ts`, `npm run release -- <id>`, коммит.
 
-Halloween Pumpkin при этом не меняется: у неё своя папка, а её утверждённый выпуск хранит собственную копию общего кода.
+Готовые декорации при этом не меняются: у каждой своя папка, а утверждённый выпуск хранит собственную копию общего кода. Так был добавлен Ghost Orbit: Halloween Pumpkin и его выпуск не затронуты.
 
 ## Подключение готового компонента (например, к маркету)
 
 Готовый компонент — папка `releases/<id>/<версия>/`. Это самостоятельный пакет: `dist/index.js` (векторы и анимация внутри, зависимостей при работе нет) и `dist/index.d.ts` (типы).
 
 ```ts
+// releases/halloween-pumpkin/1.0.0/
 import { mountHalloweenPumpkin } from '@avatar-decorations/halloween-pumpkin';
-const deco = mountHalloweenPumpkin(element, { size: 128 });
+const pumpkin = mountHalloweenPumpkin(element, { size: 128 });
+
+// releases/ghost-orbit/1.0.0/
+import { mountGhostOrbit } from '@avatar-decorations/ghost-orbit';
+const ghosts = mountGhostOrbit(element, { size: 128 });
 ```
+
+У обеих одинаковый набор методов: `setSize`, `show`/`hide`, `play`/`pause`, `seek(кадр)`, `setSpeed`, `destroy`.
 
 Способ доставки в маркет выберем, когда начнём маркет: копия папки выпуска, установка пакета прямо из этого приватного репозитория или приватный реестр пакетов. Во всех случаях анимацию переписывать не нужно. Подробности API и место для фото — в `README.md` каждой декорации.
 
