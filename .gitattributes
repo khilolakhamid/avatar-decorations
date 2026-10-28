@@ -1,0 +1,15 @@
+# Text files are stored with LF line endings.
+* text=auto eol=lf
+
+# Original vectors are kept byte for byte (their SHA-256 is checked by the
+# tests): no line-ending conversion on any computer.
+*.svg -text
+
+# Binary materials
+*.jpg binary
+*.png binary
+*.pdf binary
+*.zip binary
+
+# Generated from the .svg files by scripts/embed-assets.mjs
+**/assets/sources.generated.ts linguist-generated=true

@@ -1,0 +1,212 @@
+<title>Halloween Pumpkin Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: workbench — tool bar, one large true-size stage, a strip of smaller sizes, a layer list. */
+:root {
+  --bg: #f4f2f7;
+  --surface: #ffffff;
+  --ink: #221d2b;
+  --muted: #6b6478;
+  --line: #ded9e6;
+  --accent: #5b2a80;        /* bat purple, lifted for text contrast */
+  --accent-ink: #ffffff;
+  --pumpkin: #c2560f;
+  --stage-light: #ffffff;
+  --stage-dark: #1b1722;
+  --check-a: #e9e6ee;
+  --check-b: #ffffff;
+  --avatar: #d9d9d9;        /* the grey of the reference placeholder */
+  --font-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15121a; --surface: #1f1b26; --ink: #ece8f2; --muted: #a59db3; --line: #342e3e;
+    --accent: #c4a3e6; --accent-ink: #1a1220; --pumpkin: #f0954a;
+    --check-a: #2a2531; --check-b: #1f1b26; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15121a; --surface: #1f1b26; --ink: #ece8f2; --muted: #a59db3; --line: #342e3e;
+  --accent: #c4a3e6; --accent-ink: #1a1220; --pumpkin: #f0954a;
+  --check-a: #2a2531; --check-b: #1f1b26; color-scheme: dark;
+}
+
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+}
+.wrap {
+  max-width: 1120px; margin: 0 auto;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 24px;
+}
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 4vw, 36px); line-height: 1.1; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 span { color: var(--pumpkin); }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 18px; margin: 0; }
+.status { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; background: var(--surface); }
+.status b { color: var(--pumpkin); font-weight: 500; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
+.group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.group > .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button, .btn { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--ink); padding: 6px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.btn { border: 1px solid var(--line); border-radius: 8px; }
+.btn:disabled { color: var(--muted); cursor: not-allowed; opacity: 0.7; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label.check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px; }
+input[type="range"] { width: 110px; accent-color: var(--accent); }
+.hint { font-size: 13px; color: var(--muted); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; align-items: start; }
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.stage-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.stage-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.px { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* one preview box = optional avatar circle + decoration (+ reference overlay on the big one) */
+.preview { position: relative; flex: none; max-width: 100%; aspect-ratio: 1 / 1; }
+.preview .avatar { position: absolute; border-radius: 50%; background: var(--avatar); left: 7.4219%; top: 7.4219%; width: 85.1563%; height: 85.1563%; }
+.preview .deco { position: absolute; inset: 0; }
+.preview .deco svg { width: 100% !important; height: 100% !important; }
+.preview .ref { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+.ground { border-radius: 8px; padding: 16px; display: flex; justify-content: center; overflow: hidden; }
+.ground[data-bg="light"] { background: var(--stage-light); }
+.ground[data-bg="dark"] { background: var(--stage-dark); }
+.ground[data-bg="check"] { background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 16px 16px; }
+.big { width: 512px; }
+
+.sizes { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: center; }
+.sizes figure { margin: 0; display: grid; justify-items: center; gap: 6px; }
+
+aside { display: grid; gap: 12px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
+ol.layers { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+ol.layers li button { width: 100%; text-align: left; display: flex; justify-content: space-between; gap: 8px; font: inherit; font-size: 14px; background: transparent; border: 0; border-radius: 6px; padding: 6px 8px; color: var(--ink); cursor: default; }
+ol.layers li button:hover, ol.layers li button:focus-visible { background: var(--bg); }
+ol.layers code { font-family: var(--font-mono); font-size: 13px; }
+ol.layers small { color: var(--muted); font-size: 12px; }
+.panel p { margin: 0; font-size: 14px; color: var(--muted); }
+.panel dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
+.panel dt { color: var(--muted); }
+.panel dd { margin: 0; font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.player { gap: 12px 20px; }
+.jumps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jumps .btn { text-align: center; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); min-width: 110px; font-weight: 600; }
+.scrub { flex: 1 1 260px; min-width: 0; display: grid; gap: 4px; }
+.scrub input { width: 100%; accent-color: var(--accent); margin: 0; }
+.marks { position: relative; height: 18px; }
+.mark { position: absolute; top: 0; height: 18px; font-size: 11px; line-height: 18px; padding-left: 6px; border-radius: 4px; color: var(--ink); white-space: nowrap; overflow: hidden; }
+.mark.breath { background: color-mix(in srgb, var(--pumpkin) 18%, transparent); }
+.mark.bats { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.mark.blink { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.readout { min-width: 130px; text-align: right; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Halloween <span>Pumpkin</span></h1>
+    <div class="status">Этап 6 · <b>летучие мыши</b> · 3 с · 60 fps</div>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Настройки просмотра">
+    <div class="group">
+      <span class="label">Фон</span>
+      <div class="seg" id="bg-seg">
+        <button type="button" id="bg-light" data-bg="light" aria-pressed="true">Светлый</button>
+        <button type="button" id="bg-dark" data-bg="dark" aria-pressed="false">Тёмный</button>
+        <button type="button" id="bg-check" data-bg="check" aria-pressed="false">Прозрачность</button>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="opt-avatar" checked> Серый аватар</label>
+    <div class="group">
+      <label class="check"><input type="checkbox" id="opt-ref"> Наложить референс</label>
+      <input type="range" id="ref-opacity" min="0" max="100" value="50" aria-label="Прозрачность референса" disabled>
+    </div>
+  </div>
+
+  <div class="toolbar player" role="group" aria-label="Воспроизведение">
+    <button type="button" class="btn primary" id="play-toggle">Пауза</button>
+    <div class="group">
+      <span class="label">Скорость</span>
+      <div class="seg" id="speed-seg">
+        <button type="button" id="speed-1" data-speed="1" aria-pressed="true">1×</button>
+        <button type="button" id="speed-05" data-speed="0.5" aria-pressed="false">0,5×</button>
+        <button type="button" id="speed-025" data-speed="0.25" aria-pressed="false">0,25×</button>
+      </div>
+    </div>
+    <div class="scrub">
+      <input type="range" id="scrub" min="0" max="179" step="1" value="0" aria-label="Кадр цикла">
+      <div class="marks" aria-hidden="true">
+        <span class="mark breath" style="left:0;width:36.67%">вдох</span>
+        <span class="mark blink" style="left:36.67%;width:20%">моргание</span>
+      </div>
+      <div class="marks" aria-hidden="true">
+        <span class="mark bats" style="left:16.67%;width:65.56%">летучие мыши видны (кадры 30–148)</span>
+      </div>
+    </div>
+    <span class="px readout" id="readout">кадр 0 · 0,00 с</span>
+  </div>
+
+  <div class="main">
+    <section class="stage-card" aria-labelledby="big-title">
+      <div class="stage-head">
+        <h2 id="big-title">Основной размер</h2>
+        <span class="px" id="big-px">512 × 512</span>
+      </div>
+      <div class="ground" data-bg="light">
+        <div class="preview big" id="big"></div>
+      </div>
+      <div class="stage-head">
+        <h2>Меньшие размеры</h2>
+        <span class="px">в реальных пикселях</span>
+      </div>
+      <div class="ground" data-bg="light">
+        <div class="sizes" id="sizes"></div>
+      </div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <h2>Слои снизу вверх</h2>
+        <p>Наведите на название, чтобы увидеть, где этот вектор в композиции.</p>
+        <ol class="layers" id="layers"></ol>
+      </div>
+      <div class="panel">
+        <h2>Быстрый переход</h2>
+        <div class="jumps">
+          <button type="button" class="btn" data-jump="0">Начало цикла</button>
+          <button type="button" class="btn" data-jump="66">Пик вдоха</button>
+          <button type="button" class="btn" data-jump="80">Глаза закрыты</button>
+          <button type="button" class="btn" data-jump="90">Пик шапочки</button>
+          <button type="button" class="btn" data-jump="40">Мыши появляются</button>
+          <button type="button" class="btn" data-jump="125">Мыши исчезают</button>
+        </div>
+        <p>Ставит паузу на нужном кадре. «Продолжить» запускает дальше.</p>
+      </div>
+      <div class="panel">
+        <h2>Место для фото</h2>
+        <dl>
+          <dt>Центр</dt><dd id="area-c"></dd>
+          <dt>Диаметр</dt><dd id="area-d"></dd>
+          <dt>Доля</dt><dd id="area-p"></dd>
+        </dl>
+        <p>Серый круг есть только на этой странице. В саму декорацию он не входит.</p>
+      </div>
+    </aside>
+  </div>
+</div>

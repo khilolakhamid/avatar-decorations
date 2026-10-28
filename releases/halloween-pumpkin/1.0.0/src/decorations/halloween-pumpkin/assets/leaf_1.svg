@@ -1,0 +1,25 @@
+<svg width="98" height="93" viewBox="0 0 98 93" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_20_2315)">
+<path d="M77.4367 44.6586C66.772 19.0488 47.1577 15.3307 38.6836 16.6729C27.6511 17.4999 19.4161 24.9334 16.6777 28.5468C5.14297 48.3526 27.6904 75.1419 37.5293 77.74C44.43 79.8332 68.4821 85.1003 79.6457 87.4723C78.5515 76.9384 75.0291 62.4025 73.4047 56.4513L77.4367 44.6586Z" fill="#8FAA34"/>
+<path d="M16.6777 28.5468C5.14297 48.3526 27.6904 75.1419 37.5293 77.74C38.8317 78.1351 40.745 78.6432 43.0672 79.2235C40.9464 75.6628 37.9784 65.8419 43.0725 55.044L60.078 68.1047C57.3986 60.2089 55.0737 41.2021 67.2088 28.3416C56.9706 17.4068 44.8641 15.694 38.6836 16.6729C27.6511 17.4999 19.4161 24.9334 16.6777 28.5468Z" fill="url(#paint0_linear_20_2315)"/>
+<path d="M38.6836 16.6729C47.1577 15.3307 66.772 19.0488 77.4367 44.6586L73.4047 56.4513C75.0291 62.4025 78.5515 76.9384 79.6457 87.4723C68.4821 85.1003 44.43 79.8332 37.5293 77.74C27.6904 75.1419 5.14297 48.3526 16.6777 28.5468C19.4161 24.9334 27.6511 17.4999 38.6836 16.6729Z" stroke-width="8" stroke="url(#paint1_linear_20_2315)"/>
+<path d="M59.8781 63.9865C50.3952 51.6206 29.345 34.1594 17.8301 28.5551L26.9394 21.6998C46.4686 28.2575 58.1317 53.0229 59.8781 63.9865Z" fill="url(#paint2_linear_20_2315)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_20_2315" x1="59.51" y1="71.4104" x2="10.666" y2="20.3785" gradientUnits="userSpaceOnUse">
+<stop stop-color="#373F2D" stop-opacity="0"/>
+<stop offset="1" stop-color="#373F2D"/>
+</linearGradient>
+<linearGradient id="paint1_linear_20_2315" x1="24.4113" y1="32.6051" x2="72.7735" y2="99.0963" gradientUnits="userSpaceOnUse">
+<stop stop-color="#383816"/>
+<stop offset="1" stop-color="#8B7722"/>
+</linearGradient>
+<linearGradient id="paint2_linear_20_2315" x1="36.5619" y1="43.8715" x2="62.1786" y2="66.6759" gradientUnits="userSpaceOnUse">
+<stop stop-color="#383816"/>
+<stop offset="1" stop-color="#8B7722"/>
+</linearGradient>
+<clipPath id="clip0_20_2315">
+<rect width="74" height="93" fill="white" transform="translate(0 21.4076) rotate(-16.8156)"/>
+</clipPath>
+</defs>
+</svg>

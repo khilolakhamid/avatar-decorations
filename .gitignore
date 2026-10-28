@@ -1,0 +1,30 @@
+# Installed dependencies — restored with `npm install`
+node_modules/
+
+# Build output of the working project — restored with `npm run build`.
+# Leading slash: only the root dist/. A frozen release keeps its own
+# releases/<id>/<version>/dist/ so it can be used without building.
+/dist/
+
+# Temporary folders of the test and release scripts
+.test-build/
+.release-staging/
+
+# Release archives — the same content is committed as releases/<id>/<version>/
+/releases/*.zip
+
+# Logs, caches, editor and OS files
+*.log
+npm-debug.log*
+.npm/
+.cache/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit
+.env
+.env.*
+*.pem
+*.key
