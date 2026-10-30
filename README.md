@@ -8,6 +8,7 @@
 |---|---|---|---|---|---|---|
 | Halloween Pumpkin | `halloween-pumpkin` | `src/decorations/halloween-pumpkin/` | `releases/halloween-pumpkin/1.0.0/` | `mountHalloweenPumpkin()` | утверждена 28.10.2026 | не экспортирован |
 | Ghost Orbit | `ghost-orbit` | `src/decorations/ghost-orbit/` | `releases/ghost-orbit/1.0.0/` | `mountGhostOrbit()` | утверждена 28.10.2026 | не экспортирован |
+| Cat Ears | `cat-ears` | `src/decorations/cat-ears/` | `releases/cat-ears/1.0.0/` | `mountCatEars()` | утверждена 30.10.2026 | не экспортирован |
 
 Декорации полностью независимы: у каждой свои векторы, анимация, тесты и выпуск. Ни одна не импортирует другую, и каждую можно подключить без остальных.
 
@@ -23,20 +24,27 @@ avatar-decorations/
 │   │   │   ├── animation/           ключевые кадры и логика анимации
 │   │   │   ├── index.ts             публичный интерфейс
 │   │   │   └── README.md, STATUS.md документация и статус версии
-│   │   └── ghost-orbit/
-│   │       ├── assets/              оригинальные SVG ghost, face + sources.generated.ts
-│   │       ├── component/           орбита, движение (motion.ts), сборка SVG, класс компонента
+│   │   ├── ghost-orbit/
+│   │   │   ├── assets/              оригинальные SVG ghost, face + sources.generated.ts
+│   │   │   ├── component/           орбита, движение (motion.ts), сборка SVG, класс компонента
+│   │   │   ├── index.ts             публичный интерфейс
+│   │   │   └── README.md, STATUS.md
+│   │   └── cat-ears/
+│   │       ├── assets/              оригинальный SVG ear + sources.generated.ts
+│   │       ├── component/           раскладка, покачивание (motion.ts), сборка SVG, класс компонента
 │   │       ├── index.ts             публичный интерфейс
 │   │       └── README.md, STATUS.md
 │   ├── shared/                      общий движок анимации и SVG-инструменты
 │   ├── demo/                        демо-страницы разработчика (серый аватар, кнопки) — не входят в компоненты
-│   │   └── ghost-orbit/             демо Ghost Orbit (корень demo/ — Halloween Pumpkin)
+│   │   ├── ghost-orbit/             демо Ghost Orbit (корень demo/ — Halloween Pumpkin)
+│   │   └── cat-ears/                демо Cat Ears (можно загрузить своё фото)
 │   └── types/                       тип для .jpg (только демо)
 ├── releases/                        утверждённые версии, только чтение
 │   ├── halloween-pumpkin/1.0.0/     готовый пакет: dist/, исходники, тесты, документация
-│   └── ghost-orbit/1.0.0/           готовый пакет Ghost Orbit
+│   ├── ghost-orbit/1.0.0/           готовый пакет Ghost Orbit
+│   └── cat-ears/1.0.0/              готовый пакет Cat Ears
 ├── tests/                           автотесты (npm test)
-├── reference/                       материалы Halloween Pumpkin: референс композиции, требования TGS
+├── reference/                       материалы: референсы композиций (Halloween Pumpkin, cat-ears/), требования TGS
 ├── scripts/                         сборка, встраивание SVG, тесты, выпуск версий
 ├── package.json, tsconfig*.json     настройки сборки
 └── .gitignore, .gitattributes
@@ -50,7 +58,7 @@ avatar-decorations/
 
 ```bash
 npm install                                  # esbuild и TypeScript, только для разработки
-npm run dev                                  # демо: http://localhost:5173 (Halloween Pumpkin), /ghost-orbit (Ghost Orbit)
+npm run dev                                  # демо: http://localhost:5173 (Halloween Pumpkin), /ghost-orbit, /cat-ears
 npm run build                                # dist/<id>/index.js для каждой декорации + демо-страницы
 npm test                                     # автотесты
 npm run typecheck                            # проверка типов
@@ -73,7 +81,7 @@ npm run release -- <id-декорации>            # выпуск утвер�
 3. Добавить анимацию (`animation/timeline.ts`), тесты (`tests/<id>.test.ts`), документацию.
 4. После утверждения: версия `1.0.0` в `index.ts`, `npm run release -- <id>`, коммит.
 
-Готовые декорации при этом не меняются: у каждой своя папка, а утверждённый выпуск хранит собственную копию общего кода. Так был добавлен Ghost Orbit: Halloween Pumpkin и его выпуск не затронуты.
+Готовые декорации при этом не меняются: у каждой своя папка, а утверждённый выпуск хранит собственную копию общего кода. Так были добавлены Ghost Orbit и Cat Ears: предыдущие декорации и их выпуски не затронуты.
 
 ## Подключение готового компонента (например, к маркету)
 
@@ -87,9 +95,13 @@ const pumpkin = mountHalloweenPumpkin(element, { size: 128 });
 // releases/ghost-orbit/1.0.0/
 import { mountGhostOrbit } from '@avatar-decorations/ghost-orbit';
 const ghosts = mountGhostOrbit(element, { size: 128 });
+
+// releases/cat-ears/1.0.0/
+import { mountCatEars } from '@avatar-decorations/cat-ears';
+const ears = mountCatEars(element, { size: 128 });
 ```
 
-У обеих одинаковый набор методов: `setSize`, `show`/`hide`, `play`/`pause`, `seek(кадр)`, `setSpeed`, `destroy`.
+У всех одинаковый набор методов: `setSize`, `show`/`hide`, `play`/`pause`, `seek(кадр)`, `setSpeed`, `destroy`.
 
 Способ доставки в маркет выберем, когда начнём маркет: копия папки выпуска, установка пакета прямо из этого приватного репозитория или приватный реестр пакетов. Во всех случаях анимацию переписывать не нужно. Подробности API и место для фото — в `README.md` каждой декорации.
 

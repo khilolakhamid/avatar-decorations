@@ -1,0 +1,50 @@
+function T(r){let t=r.match(/<svg\b([^>]*)>([\s\S]*)<\/svg>/i);if(!t)throw new Error("parseSvg: no <svg> root element found");let[,e,n]=t,s=e.match(/viewBox="([^"]+)"/),o=0,l=0;if(s){let a=s[1].trim().split(/[\s,]+/).map(Number);o=a[2],l=a[3]}else o=Number(e.match(/\bwidth="([\d.]+)"/)?.[1]??0),l=Number(e.match(/\bheight="([\d.]+)"/)?.[1]??0);let p=[],i=n.replace(/<defs>([\s\S]*?)<\/defs>/gi,(a,d)=>(p.push(d),"")).trim();return{width:o,height:l,defs:p.join(`
+`).trim(),body:i}}function A(r,t){return r.replace(/\bid="([^"]+)"/g,(e,n)=>`id="${t}${n}"`).replace(/url\(#([^)]+)\)/g,(e,n)=>`url(#${t}${n})`).replace(/\b(xlink:href|href)="#([^"]+)"/g,(e,n,s)=>`${n}="#${t}${s}"`)}var O=0;function F(r){return O+=1,`${r}-${O.toString(36)}-`}var G=`<svg width="160" height="226" viewBox="0 0 160 226" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M132.999 132.339C158.409 66.7339 143.163 12.0792 132.999 6.21094C106.202 21.8652 94.19 47.7375 76.6337 68.0658C83.2866 66.957 94.652 63.8078 98.81 62.1137C95.576 83.774 78.0197 89.3181 71.5517 90.7041C76.1717 96.2482 87.7219 102.254 97.886 105.95C80.7918 118.886 64.6216 111.956 58.6155 109.646C60.2752 116.7 61.1897 125.618 53.9954 138.406L96.5 185.877C111.975 198.539 116.828 198.352 132.999 215.5C139.005 186.801 131.528 169.774 124.906 165C145.234 160.195 155.406 140 153.406 124.5C144.905 131.892 137.465 131.569 132.999 132.339Z" fill="#F9F6F5"/>
+<path d="M124.682 165.087C132.536 173.403 140.853 185.877 132.998 215.5C116.906 193.5 96.4056 190.5 83.9056 169" stroke-width="8" stroke="url(#paint0_linear_75_397)"/>
+<path d="M147.406 53C139.006 37.8 130.406 59 124.406 57L108.906 26L130.406 5C142.806 11 148.406 42.6667 147.406 53Z" fill="url(#paint1_linear_75_397)"/>
+<path d="M97.886 105.95C80.7918 118.886 64.6216 111.956 58.6155 109.646C60.2752 116.7 61.1897 125.617 53.9954 138.406L81.7158 169.707C103.892 151.028 130.399 109.646 125.144 50.9715C124.648 45.4274 121.91 15.9513 97.886 39.9346C90.746 49.4999 84.2055 59.2984 76.6337 68.0657C83.2866 66.9569 94.652 63.8076 98.81 62.1136C95.576 83.7739 78.0197 89.318 71.5517 90.704C76.1717 96.2481 87.7219 102.254 97.886 105.95Z" fill="url(#paint2_linear_75_397)"/>
+<path d="M89.5698 41.6095C113.594 17.6262 122.372 31.9072 124.682 47.1536C133.507 105.398 104.082 148.321 81.9056 167C75.7895 158.752 61.8574 140.755 55.0574 134.755" stroke-width="8" stroke="url(#paint3_linear_75_397)"/>
+<path d="M132.999 6.21076C111.561 0.666684 46.6033 28.3332 7.33284 62.1135C2.71278 83.7738 43.8313 107.798 51.2234 142.911C52.2589 141.357 53.1793 139.857 53.9954 138.406C61.1897 125.617 60.2752 116.7 58.6155 109.646C64.6216 111.956 80.7918 118.886 97.886 105.95C87.7219 102.254 76.1717 96.248 71.5517 90.7039C78.0197 89.3179 95.576 83.7738 98.81 62.1135C94.652 63.8076 83.2866 66.9568 76.6337 68.0656C94.1899 47.7373 106.202 21.865 132.999 6.21076Z" fill="#F9F6F5"/>
+<path d="M66.7007 50.0378C63.1042 57.1934 48.23 68.2243 35.7427 70.493C40.3697 73.9989 54.27 79.3933 60.3629 91.6774C54.2641 89.0593 41.1488 87.2217 31.2434 87.6975C34.7939 93.1641 41.8673 107.168 41.7569 119.453L16.9056 87.6973C9.49527 80.8309 2.63424 61.9407 21.6025 52.6843L60.3629 31.7593C52.583 43.8744 41.4751 52.1716 34.7292 55.9895C42.9204 56.9921 52.5929 55.5703 66.7007 50.0378Z" fill="url(#paint4_linear_75_397)"/>
+<path d="M132.998 215.5C140.853 185.877 132.536 173.403 124.682 165.087C145.011 160.282 152.52 145.622 153.906 123.5C145.406 128 130.906 133.5 132.536 132.285C160.719 77.306 143.163 12.0793 132.998 6.21102C111.561 0.666947 28.5851 39.4215 7.33282 62.1138C-2.36934 75.458 43.8313 107.798 51.2234 142.911C61.3875 127.665 60.1957 114.354 59.4056 110.5M132.998 6.21102C107.588 12.6252 91.8799 53.2817 76.6337 68.0659C81.7158 68.0659 92.3419 65.7559 100.196 62.1138" stroke-width="8" stroke="#D5CCE5"/>
+<path d="M132.536 132.285C160.719 77.306 143.163 12.0793 132.998 6.21102C111.561 0.666947 28.5851 39.4215 7.33282 62.1138M132.998 6.21102C107.588 12.6252 91.8799 53.2817 76.6337 68.0659" stroke-width="8" stroke="url(#paint5_linear_75_397)"/>
+<path d="M76.6337 68.0659C81.7158 68.0659 92.3419 65.7559 100.196 62.1138C96.962 83.7741 79.4057 89.3182 72.9377 90.7042C76.6337 95.5 83.4056 101 92.9056 106.5C76.6337 120 64.1957 113.354 59.4056 111.5C60.1957 115.354 61.3876 127.665 51.2234 142.911" stroke-width="8" stroke="url(#paint6_linear_75_397)"/>
+<path d="M121.906 140.5C123.906 138.5 129.072 130 131.406 126L144.906 131.5C142.106 133.5 128.406 138.333 121.906 140.5Z" fill="url(#paint7_linear_75_397)"/>
+<defs>
+<linearGradient id="paint0_linear_75_397" x1="113.406" y1="209" x2="86.9056" y2="188.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#D5CCE5"/>
+<stop offset="1" stop-color="#F9F6F5"/>
+</linearGradient>
+<linearGradient id="paint1_linear_75_397" x1="110.906" y1="16" x2="135.679" y2="39.2737" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FDC2C1"/>
+<stop offset="1" stop-color="#FCCECC" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint2_linear_75_397" x1="105.278" y1="41.7314" x2="61.8495" y2="171.555" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFB7B5"/>
+<stop offset="1" stop-color="#F8C3C2" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint3_linear_75_397" x1="115.906" y1="57.5" x2="60.9056" y2="147.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FAA8AB"/>
+<stop offset="0.529367" stop-color="#F9CECF"/>
+<stop offset="1" stop-color="#F9EEED"/>
+</linearGradient>
+<linearGradient id="paint4_linear_75_397" x1="14.9056" y1="71" x2="69.87" y2="79.7239" gradientUnits="userSpaceOnUse">
+<stop stop-color="#D5CCE5"/>
+<stop offset="1" stop-color="#FFE1FA" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint5_linear_75_397" x1="95.4056" y1="77.5" x2="134.406" y2="5.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFA8EB" stop-opacity="0"/>
+<stop offset="1" stop-color="#A494B5"/>
+</linearGradient>
+<linearGradient id="paint6_linear_75_397" x1="82.4056" y1="75" x2="125.906" y2="84.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#D5CCE5"/>
+<stop offset="1" stop-color="#A683A6"/>
+</linearGradient>
+<linearGradient id="paint7_linear_75_397" x1="133.406" y1="126" x2="118.906" y2="142" gradientUnits="userSpaceOnUse">
+<stop stop-color="#D5CCE5"/>
+<stop offset="1" stop-color="#A494B5"/>
+</linearGradient>
+</defs>
+</svg>
+`;var b={ear:G},Z={ear:"right cat ear: light outer part, pink inner part, lavender outline and fur (the left ear is its mirror image)"};var m=512,q={cx:256,cy:256,r:218},g={x:341,y:13,scale:1},S=[92,179],H=["ear-left","ear-right"];var u={out:3,keys:[[0,0],[.3,1],[.58,0],[.8,-.4]],rightDelay:0};function M(r,t){let e=r.length,n=t-Math.floor(t),s=e-1;for(let c=0;c<e;c++)r[c][0]<=n&&(s=c);let o=c=>{let D=Math.floor(c/e),[N,B]=r[(c%e+e)%e];return[N+D,B]},[l,p]=o(s-1),[i,a]=o(s),[d,$]=o(s+1),[k,I]=o(s+2),h=(n-i)/(d-i),V=($-p)/(d-l)*(d-i),L=(I-a)/(k-i)*(d-i),f=h*h,C=f*h;return(2*C-3*f+1)*a+(C-2*f+h)*V+(-2*C+3*f)*$+(C-f)*L}function v(r){return u.out*M(u.keys,r)}function R(r){return u.out*M(u.keys,r-u.rightDelay)}var x=["swing-left","swing-right"],P=r=>Math.round(r*1e3)/1e3;function y(r=0){let[t,e]=S;return{"swing-left":`rotate(${P(v(r))} ${t} ${e})`,"swing-right":`rotate(${P(R(r))} ${t} ${e})`}}function w(r,{idPrefix:t="ce-",progress:e=0}={}){let n=T(r.ear),s=`${t}ear-`,o=[n.defs?A(n.defs,s):"",`<g id="${t}ear" fill="none">${A(n.body,s)}</g>`].join(""),l=y(e),p=`translate(${g.x} ${g.y}) scale(${g.scale})`,i=a=>`<g transform="${p}"><g data-part="${a}" transform="${l[a]}"><use href="#${t}ear"/></g></g>`;return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${512} ${512}" fill="none" overflow="visible" data-decoration="cat-ears"><defs>${o}</defs><g data-layer="ear-left" transform="translate(${512} 0) scale(-1 1)">${i("swing-left")}</g><g data-layer="ear-right">${i("swing-right")}</g></svg>`}var U=3e3,z=60,E=180,_=class{constructor(t,e={}){this.playing=!1;this.destroyed=!1;this.phase=0;this.lastTime=null;this.rafId=0;this.parts={};this.tick=t=>{this.playing&&(this.lastTime!==null&&(this.phase=(this.phase+(t-this.lastTime)*this.speed/U)%1),this.lastTime=t,this.render(),this.rafId=requestAnimationFrame(this.tick))};let{size:n="100%",visible:s=!0,autoplay:o=!0,className:l,speed:p=1}=e;this.speed=p;let i=document.createElement("template");i.innerHTML=w(b,{idPrefix:F("ce")}),this.element=i.content.firstElementChild,this.element.setAttribute("role","presentation"),this.element.setAttribute("aria-hidden","true"),this.element.style.display="block",this.element.style.pointerEvents="none",this.element.style.background="transparent",l&&this.element.setAttribute("class",l);for(let a of x)this.parts[a]=this.element.querySelector(`[data-part="${a}"]`);this.setSize(n),this.setVisible(s),t.appendChild(this.element),o&&this.play()}setSize(t){let e=typeof t=="number"?`${t}px`:t;this.element.style.width=e,this.element.style.height=e}show(){this.setVisible(!0)}hide(){this.setVisible(!1)}setVisible(t){this.element.style.visibility=t?"visible":"hidden"}play(){this.playing||this.destroyed||(this.playing=!0,this.lastTime=null,this.rafId=requestAnimationFrame(this.tick))}pause(){this.playing=!1,cancelAnimationFrame(this.rafId)}get isPlaying(){return this.playing}setSpeed(t){this.speed=t}seek(t){let e=t/E;this.phase=(e%1+1)%1,this.render()}get frame(){return Math.floor(this.phase*E)%E}get progress(){return this.phase}destroy(){this.pause(),this.destroyed=!0,this.element.remove()}render(){let t=y(this.phase);for(let e of x)this.parts[e].setAttribute("transform",t[e])}};function j(r,t){return new _(r,t)}function K(r="ce-",t=0){return w(b,{idPrefix:r,progress:t})}var pt={id:"cat-ears",name:"Cat Ears",version:"1.0.0",status:{web:"approved (2026-10-30)",tgs:"not-exported"}};export{Z as ASSET_ROLES,q as AVATAR_AREA,m as CANVAS_SIZE,pt as CAT_EARS_META,_ as CatEarsDecoration,x as EAR_PARTS,S as EAR_PIVOT,z as FPS,E as FRAME_COUNT,H as LAYER_ORDER,U as LOOP_DURATION_MS,u as MOTION,g as RIGHT_EAR,y as earTransforms,v as leftEarAngle,j as mountCatEars,K as renderCatEarsSvg,R as rightEarAngle};

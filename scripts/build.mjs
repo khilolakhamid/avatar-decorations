@@ -5,6 +5,8 @@
 //                                      dist/demo.html                    (Halloween Pumpkin demo page)
 //                                      dist/ghost-orbit/index.js         (Ghost Orbit, the decoration alone)
 //                                      dist/ghost-orbit-demo.html        (Ghost Orbit demo page)
+//                                      dist/cat-ears/index.js            (Cat Ears, the decoration alone)
+//                                      dist/cat-ears-demo.html           (Cat Ears demo page)
 //   node scripts/build.mjs --serve  → same, rebuilds on change and serves the demo at http://localhost:5173
 import * as esbuild from 'esbuild';
 import { execFileSync } from 'node:child_process';
@@ -92,10 +94,12 @@ async function buildAll({ types = true } = {}) {
     buildDemo(),
     buildLibrary('ghost-orbit'),
     buildDemo('src/demo/ghost-orbit', 'dist/ghost-orbit-demo.html'),
+    buildLibrary('cat-ears'),
+    buildDemo('src/demo/cat-ears', 'dist/cat-ears-demo.html'),
   ]);
   if (types) buildTypes();
   console.log(
-    `built in ${Date.now() - t} ms → dist/halloween-pumpkin/index.js${types ? ', index.d.ts' : ''}, dist/demo.html, dist/ghost-orbit/index.js, dist/ghost-orbit-demo.html`,
+    `built in ${Date.now() - t} ms → dist/halloween-pumpkin/index.js${types ? ', index.d.ts' : ''}, dist/demo.html, dist/ghost-orbit/index.js, dist/ghost-orbit-demo.html, dist/cat-ears/index.js, dist/cat-ears-demo.html`,
   );
 }
 
@@ -111,8 +115,14 @@ if (serve) {
   });
   createServer((req, res) => {
     res.setHeader('content-type', 'text/html; charset=utf-8');
-    const page = req.url?.startsWith('/ghost-orbit') ? 'dist/ghost-orbit-demo.html' : 'dist/demo.html';
+    const page = req.url?.startsWith('/ghost-orbit')
+      ? 'dist/ghost-orbit-demo.html'
+      : req.url?.startsWith('/cat-ears')
+        ? 'dist/cat-ears-demo.html'
+        : 'dist/demo.html';
     // the template has no <html>/<head>; browsers handle that, but give a proper doctype locally
     res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${readFileSync(join(root, page), 'utf8')}`);
-  }).listen(5173, () => console.log('Demo: http://localhost:5173 (Halloween Pumpkin), http://localhost:5173/ghost-orbit'));
+  }).listen(5173, () =>
+    console.log('Demo: http://localhost:5173 (Halloween Pumpkin), /ghost-orbit, /cat-ears'),
+  );
 }
