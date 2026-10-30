@@ -1,0 +1,173 @@
+/**
+ * Paper Plane Orbit demo page. Uses only the decoration's public interface.
+ * The avatar circle, the uploaded photo, the reference overlay and all
+ * controls live here, never inside the decoration.
+ */
+import {
+  AVATAR_AREA,
+  CANVAS_SIZE,
+  mountPaperPlaneOrbit,
+  pathPoint,
+  planeState,
+  type PaperPlaneOrbitDecoration,
+} from '../../decorations/paper-plane-orbit';
+import referenceUrl from '../../../reference/paper-plane-orbit/composition-reference.png';
+
+const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const avatars: HTMLElement[] = [];
+const decorations: PaperPlaneOrbitDecoration[] = [];
+
+function buildPreview(box: HTMLElement, sizePx: number) {
+  const pct = (v: number) => `${(v / CANVAS_SIZE) * 100}%`;
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.dataset.mode = 'grey';
+  Object.assign(avatar.style, {
+    left: pct(AVATAR_AREA.cx - AVATAR_AREA.r),
+    top: pct(AVATAR_AREA.cy - AVATAR_AREA.r),
+    width: pct(AVATAR_AREA.r * 2),
+    height: pct(AVATAR_AREA.r * 2),
+  });
+  const holder = document.createElement('div');
+  holder.className = 'deco';
+  box.append(avatar, holder);
+  box.style.width = `${sizePx}px`;
+  avatars.push(avatar);
+  decorations.push(mountPaperPlaneOrbit(holder, { size: '100%' }));
+}
+
+// previews
+const big = $('big');
+buildPreview(big, CANVAS_SIZE);
+const ref = document.createElement('img');
+ref.className = 'ref';
+ref.src = referenceUrl;
+ref.alt = 'Референс';
+ref.hidden = true;
+// reference: 1226 × 1196, avatar circle centre (612, 606.5), radius 522.5 → map onto the 512 canvas
+const k = 218 / 522.5;
+Object.assign(ref.style, {
+  left: `${((256 - 612 * k) / 512) * 100}%`,
+  top: `${((256 - 606.5 * k) / 512) * 100}%`,
+  width: `${((1226 * k) / 512) * 100}%`,
+  height: `${((1196 * k) / 512) * 100}%`,
+});
+big.append(ref);
+for (const s of [256, 128, 64]) {
+  const fig = document.createElement('figure');
+  const box = document.createElement('div');
+  box.className = 'preview';
+  const cap = document.createElement('figcaption');
+  cap.className = 'px';
+  cap.textContent = `${s} × ${s}`;
+  fig.append(box, cap);
+  $('sizes').append(fig);
+  buildPreview(box, s);
+}
+
+new ResizeObserver(() => {
+  const w = Math.round(big.getBoundingClientRect().width);
+  $('big-px').textContent = w === CANVAS_SIZE ? '512 × 512' : `512 × 512 · сейчас показано ${w} px`;
+}).observe(big);
+
+const setPressed = (sel: string, on: Element) =>
+  document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === on)));
+
+// background
+const grounds = document.querySelectorAll<HTMLElement>('.ground');
+document.querySelectorAll<HTMLButtonElement>('#bg-seg button').forEach((btn) =>
+  btn.addEventListener('click', () => {
+    setPressed('#bg-seg button', btn);
+    grounds.forEach((g) => (g.dataset.bg = btn.dataset.bg));
+  }),
+);
+
+// avatar: grey circle, uploaded photo or nothing
+let photoUrl = '';
+const setAvatar = (mode: string) => {
+  avatars.forEach((a) => {
+    a.dataset.mode = mode;
+    a.style.backgroundImage = mode === 'photo' && photoUrl ? `url("${photoUrl}")` : '';
+  });
+  setPressed('#avatar-seg button', document.querySelector(`#avatar-seg [data-mode="${mode}"]`)!);
+};
+document.querySelectorAll<HTMLButtonElement>('#avatar-seg button').forEach((btn) =>
+  btn.addEventListener('click', () => setAvatar(btn.dataset.mode!)),
+);
+$<HTMLInputElement>('photo').addEventListener('change', (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  if (photoUrl) URL.revokeObjectURL(photoUrl);
+  photoUrl = URL.createObjectURL(file);
+  $<HTMLButtonElement>('av-photo').disabled = false;
+  setAvatar('photo');
+});
+
+// reference overlay
+const refToggle = $<HTMLInputElement>('opt-ref');
+const refOpacity = $<HTMLInputElement>('ref-opacity');
+const applyRef = () => {
+  ref.hidden = !refToggle.checked;
+  refOpacity.disabled = !refToggle.checked;
+  ref.style.opacity = String(Number(refOpacity.value) / 100);
+};
+refToggle.addEventListener('change', applyRef);
+refOpacity.addEventListener('input', applyRef);
+applyRef();
+
+// playback
+const phaseInput = $<HTMLInputElement>('phase');
+const showFrame = () => {
+  const p = decorations[0].progress;
+  const f = Math.round(p * 180);
+  phaseInput.value = String(f);
+  $('phase-out').textContent = `кадр ${f} из 180 · ${(p * 3).toFixed(2).replace('.', ',')} с`;
+  const s = planeState(p);
+  $('st-op').textContent = `${Math.round(s.opacity * 100)} %`;
+  const names = ['рисунок 1', 'рисунок 2', 'рисунок 3'];
+  $('st-phi').textContent = s.blend < 0.02 || s.viewA === s.viewB ? names[s.viewA] : s.blend > 0.98 ? names[s.viewB] : `поворот ${names[s.viewA].slice(-1)} → ${names[s.viewB].slice(-1)} (${Math.round(s.blend * 100)} %)`;
+  $('st-scale').textContent = s.scale.toFixed(2).replace('.', ',');
+  if (decorations[0].isPlaying) requestAnimationFrame(showFrame);
+};
+$('btn-play').addEventListener('click', (e) => {
+  decorations.forEach((d) => d.play());
+  setPressed('#play-seg button', e.currentTarget as Element);
+  requestAnimationFrame(showFrame);
+});
+$('btn-pause').addEventListener('click', (e) => {
+  decorations.forEach((d) => d.pause());
+  setPressed('#play-seg button', e.currentTarget as Element);
+});
+document.querySelectorAll<HTMLButtonElement>('#speed-seg button').forEach((btn) =>
+  btn.addEventListener('click', () => {
+    decorations.forEach((d) => d.setSpeed(Number(btn.dataset.speed)));
+    setPressed('#speed-seg button', btn);
+  }),
+);
+phaseInput.addEventListener('input', () => {
+  const f = Number(phaseInput.value);
+  decorations.forEach((d) => {
+    d.pause();
+    d.seek(f);
+  });
+  setPressed('#play-seg button', $('btn-pause'));
+  showFrame();
+});
+requestAnimationFrame(showFrame);
+
+// trajectory overlay (demo only)
+const pathSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+pathSvg.setAttribute('viewBox', '0 0 512 512');
+Object.assign(pathSvg.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', pointerEvents: 'none' });
+let d = '';
+for (let i = 0; i <= 120; i++) {
+  const [x, y] = pathPoint(i / 120);
+  d += `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`;
+}
+pathSvg.innerHTML = `<path d="${d}" fill="none" stroke="#3f6fa8" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+pathSvg.style.display = 'none';
+big.append(pathSvg);
+$<HTMLInputElement>('opt-path').addEventListener('change', (e) => (pathSvg.style.display = (e.target as HTMLInputElement).checked ? '' : 'none'));
+
+$('area-c').textContent = `${AVATAR_AREA.cx}, ${AVATAR_AREA.cy}`;
+$('area-d').textContent = `${AVATAR_AREA.r * 2} px из ${CANVAS_SIZE}`;
