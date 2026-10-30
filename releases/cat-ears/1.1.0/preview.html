@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cat Ears 1.1.0 — preview</title>
+<style>
+  /* Preview only: the grey circles stand in for a profile photo and are NOT part of the decoration. */
+  body { margin: 0; padding: 24px 16px; font: 14px/1.4 system-ui, sans-serif; background: #f3f4f6; color: #1f2937; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p { margin: 0 0 20px; color: #4b5563; }
+  .row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 28px; }
+  figure { margin: 0; text-align: center; }
+  figcaption { margin-top: 6px; color: #6b7280; font-size: 12px; }
+  .avatar { position: relative; }
+  .photo { position: absolute; left: 7.42%; top: 7.42%; width: 85.16%; height: 85.16%; border-radius: 50%; background: #d9d9d9; }
+  .decoration { position: absolute; inset: 0; }
+  .controls { margin: 20px 0 0; display: flex; gap: 8px; }
+  button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; }
+  @media (max-width: 600px) { .row { gap: 16px; } }
+</style>
+</head>
+<body>
+<h1>Cat Ears 1.1.0</h1>
+<p>The same component at 512, 256, 128 and 64 px. Open this file through a local web server (for example <code>npx serve .</code>) so the browser can load <code>dist/index.js</code>.</p>
+<div class="row" id="row"></div>
+<div class="controls">
+  <button id="play">Play</button>
+  <button id="pause">Pause</button>
+</div>
+<script type="module">
+  import { mountCatEars } from './dist/index.js';
+  const sizes = [512, 256, 128, 64];
+  const row = document.getElementById('row');
+  const ears = sizes.map((size) => {
+    const fig = document.createElement('figure');
+    const box = Math.min(size, window.innerWidth - 32);
+    fig.innerHTML = `<div class="avatar" style="width:${box}px;height:${box}px"><div class="photo"></div><div class="decoration"></div></div><figcaption>${size} px</figcaption>`;
+    row.appendChild(fig);
+    return mountCatEars(fig.querySelector('.decoration'), { size: '100%' });
+  });
+  document.getElementById('play').onclick = () => ears.forEach((p) => p.play());
+  document.getElementById('pause').onclick = () => ears.forEach((p) => p.pause());
+</script>
+</body>
+</html>

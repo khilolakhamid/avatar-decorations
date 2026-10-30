@@ -28,5 +28,11 @@ export const RIGHT_EAR = { x: 341, y: 13, scale: 1 } as const;
  */
 export const EAR_PIVOT = [92, 179] as const;
 
+/**
+ * Tip of the ear, in ear.svg units (the top point of its outline). The bend of
+ * the ear (draft 1.1.0) grows along the line from EAR_PIVOT to EAR_TIP.
+ */
+export const EAR_TIP = [133, 6.21] as const;
+
 /** Drawing order, back to front. */
 export const LAYER_ORDER = ['ear-left', 'ear-right'] as const;

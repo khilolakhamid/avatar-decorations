@@ -11,17 +11,17 @@ export {
   renderCatEarsSvg,
   type CatEarsOptions,
 } from './component/CatEarsDecoration';
-export { AVATAR_AREA, CANVAS_SIZE, EAR_PIVOT, LAYER_ORDER, RIGHT_EAR } from './component/layout';
-export { leftEarAngle, MOTION, rightEarAngle } from './component/motion';
-export { EAR_PARTS, earTransforms } from './component/composition';
+export { AVATAR_AREA, CANVAS_SIZE, EAR_PIVOT, EAR_TIP, LAYER_ORDER, RIGHT_EAR } from './component/layout';
+export { leftEarAngle, MOTION, rightEarAngle, swayAngle } from './component/motion';
+export { bendPoint, bendShare, EAR_SIDES, earBends, earFrame, earSways, swayShare, type EarSide, type Frame } from './component/composition';
 export { ASSET_ROLES } from './assets';
 
 export const CAT_EARS_META = {
   id: 'cat-ears',
   name: 'Cat Ears',
-  version: '1.0.0',
+  version: '1.1.0',
   status: {
-    web: 'approved (2026-10-30)',
+    web: 'approved (2026-10-30); 1.0.0 stays available in releases/cat-ears/1.0.0/',
     tgs: 'not-exported',
   },
 } as const;

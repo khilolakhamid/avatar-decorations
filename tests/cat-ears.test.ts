@@ -1,25 +1,30 @@
 /**
- * Automatic checks for Cat Ears 1.0.0.
+ * Automatic checks for Cat Ears 1.1.0 (approved 2026-10-30; 1.0.0 stays frozen in releases/cat-ears/1.0.0/).
  * Run: npm test
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
   AVATAR_AREA,
+  bendPoint,
+  bendShare,
   CAT_EARS_META,
-  EAR_PARTS,
   EAR_PIVOT,
-  earTransforms,
+  EAR_SIDES,
+  earBends,
+  earFrame,
   FRAME_COUNT,
   leftEarAngle,
   LOOP_DURATION_MS,
   renderCatEarsSvg,
   RIGHT_EAR,
   rightEarAngle,
+  swayAngle,
+  swayShare,
 } from '../src/decorations/cat-ears';
 import { SOURCE_SHA256 } from '../src/decorations/cat-ears/assets/sources.generated';
 import { uniquePrefix } from '../src/shared/svg';
@@ -53,12 +58,14 @@ test('cat-ears: no avatar placeholder, photo, background or controls inside the 
   }
 });
 
-test('cat-ears: two ears from ONE ear definition, the left one mirrored', () => {
+test('cat-ears: two ears from the same original elements, the left one mirrored', () => {
   const svg = renderCatEarsSvg('t-');
-  assert.equal((svg.match(/id="t-ear"/g) ?? []).length, 1, 'ear defined once');
-  assert.equal((svg.match(/<use href="#t-ear"\/>/g) ?? []).length, 2);
+  const elements = (readFileSync(join(DIR, 'assets', 'ear.svg'), 'utf8').match(/<path\b/g) ?? []).length;
+  assert.equal((svg.match(/<path\b/g) ?? []).length, 2 * elements, 'every element of ear.svg, once per ear');
   assert.match(svg, /data-layer="ear-left" transform="translate\(512 0\) scale\(-1 1\)"/);
   assert.deepEqual([...svg.matchAll(/data-layer="([^"]+)"/g)].map((m) => m[1]), ['ear-left', 'ear-right']);
+  // colours, strokes and widths are the file's own
+  for (const c of ['#F9F6F5', '#D5CCE5']) assert.ok(svg.includes(c));
 });
 
 test('cat-ears: two instances share no ids; every reference stays inside its instance', () => {
@@ -94,41 +101,91 @@ test('layout: same canvas and photo place as the other decorations; ears at orig
   assert.ok(d < AVATAR_AREA.r, `pivot ${d.toFixed(1)} from the centre`);
 });
 
-test('loop: 3 s, the last frame joins the first exactly', () => {
+test('loop: 3 s, the last frame joins the first exactly — also in speed', () => {
   assert.equal(LOOP_DURATION_MS, 3000);
   assert.equal(FRAME_COUNT, 180);
-  assert.deepEqual(earTransforms(1), earTransforms(0));
-  assert.ok(Math.abs(leftEarAngle(1) - leftEarAngle(0)) < 1e-9);
-  assert.ok(Math.abs(rightEarAngle(1) - rightEarAngle(0)) < 1e-9);
-  assert.deepEqual(EAR_PARTS, ['swing-left', 'swing-right']);
-});
-
-test('motion: gentle swing (out ≈ 3°, a little in), smooth, both ears together and mirrored', () => {
-  let min = Infinity, max = -Infinity, maxStep = 0;
-  for (let f = 0; f < 180; f++) {
-    const l = leftEarAngle(f / 180), r = rightEarAngle(f / 180);
-    min = Math.min(min, l, r);
-    max = Math.max(max, l, r);
-    maxStep = Math.max(maxStep, Math.abs(leftEarAngle((f + 1) / 180) - l), Math.abs(rightEarAngle((f + 1) / 180) - r));
-    // same amplitude, speed and timing: the right ear turns exactly as much as the left one, at the same moment
-    assert.equal(l, r, `frame ${f}`);
+  assert.deepEqual(earFrame(1), earFrame(0));
+  for (const fn of [leftEarAngle, rightEarAngle]) {
+    const speedEnd = fn(1) - fn(179 / 180), speedStart = fn(1 / 180) - fn(0);
+    assert.ok(Math.abs(speedEnd - speedStart) < 0.15, `speed across the seam ${speedEnd.toFixed(3)} / ${speedStart.toFixed(3)}`);
   }
-  assert.ok(max >= 2 && max <= 4, `outwards up to ${max.toFixed(2)}°`);
-  assert.ok(min < 0 && min > -2, `inwards down to ${min.toFixed(2)}°`);
-  assert.ok(maxStep < 0.15, `no jump: largest step ${maxStep.toFixed(3)}° per frame`);
+  assert.deepEqual([...EAR_SIDES], ['left', 'right']);
 });
 
-test('approved Cat Ears 1.0.0 is unchanged (markup and both ears in all 180 frames)', () => {
+test('bend: the base stays on the photo, only the upper part and the tip move', () => {
+  // base corners of the ear (lower-left corner and lowest point) do not move at all
+  for (const base of [[51.22, 142.91], [133, 215.5], [96.5, 185.88], [53.99, 138.41]] as const) {
+    assert.equal(bendShare(base), 0, `base point ${base}`);
+    assert.equal(swayShare(base), 0, `base point ${base} (sway)`);
+    assert.deepEqual(bendPoint(base, 10, 4), base);
+  }
+  assert.equal(bendShare([133, 6.21]), 1, 'the tip gets the full bend');
+  // pivot (middle of the base) lies on the photo
+  const [px, py] = EAR_PIVOT;
+  assert.ok(Math.hypot(RIGHT_EAR.x + px - AVATAR_AREA.cx, RIGHT_EAR.y + py - AVATAR_AREA.cy) < AVATAR_AREA.r);
+});
+
+test('motion: much livelier than 1.0.0 (2–3× the tip travel), springy, the two ears not identical, smooth', () => {
+  const tipLen = Math.hypot(133 - EAR_PIVOT[0], 6.21 - EAR_PIVOT[1]);
+  const oldTravel = tipLen * (3 * Math.PI) / 180; // 1.0.0: whole ear turned up to 3°
+  let maxOut = 0, minIn = 0, maxStep = 0, differ = 0, opposite = false;
+  for (let f = 0; f < FRAME_COUNT; f++) {
+    const b = earBends(f / FRAME_COUNT), n = earBends((f + 1) / FRAME_COUNT);
+    maxOut = Math.max(maxOut, b.left, b.right);
+    minIn = Math.min(minIn, b.left, b.right);
+    maxStep = Math.max(maxStep, Math.abs(n.left - b.left), Math.abs(n.right - b.right));
+    if (Math.abs(b.left - b.right) > 1) differ++;
+    if (b.left > 3 && b.right < -3) opposite = true;
+  }
+  const newTravel = tipLen * (maxOut * Math.PI) / 180;
+  assert.ok(newTravel / oldTravel >= 2 && newTravel / oldTravel <= 4, `tip travel ×${(newTravel / oldTravel).toFixed(1)}`);
+  assert.ok(minIn < -2, 'springs back past the rest');
+  assert.ok(maxOut <= 12, `no folding: tip bend up to ${maxOut.toFixed(1)}°`);
+  assert.ok(differ > 60, 'the ears move independently');
+  assert.ok(opposite, 'once the ears lean to opposite sides together');
+  assert.ok(maxStep < 1.2, `no jerks: largest step ${maxStep.toFixed(2)}° per frame`);
+});
+
+test('whole-ear sway: gentler than the tip, smooth and seamless, the ears out of phase, not rubbery together', () => {
+  let maxSway = 0, maxTotal = 0, maxStep = 0, differ = 0;
+  for (let f = 0; f < FRAME_COUNT; f++) {
+    const p = f / FRAME_COUNT;
+    for (const side of ['left', 'right'] as const) {
+      const sw = swayAngle(p, side);
+      const tip = side === 'left' ? leftEarAngle(p) : rightEarAngle(p);
+      maxSway = Math.max(maxSway, Math.abs(sw));
+      maxTotal = Math.max(maxTotal, Math.abs(sw + tip));
+      maxStep = Math.max(maxStep, Math.abs(swayAngle((f + 1) / FRAME_COUNT, side) - sw));
+    }
+    if (Math.abs(swayAngle(p, 'left') - swayAngle(p, 'right')) > 1) differ++;
+  }
+  assert.ok(maxSway >= 2.5 && maxSway < 6, `sway up to ${maxSway.toFixed(2)}° (noticeable, below the tip's 10°)`);
+  assert.ok(maxTotal <= 15, `tip + sway together up to ${maxTotal.toFixed(1)}°`);
+  assert.ok(maxStep < 0.25, `soft: largest sway step ${maxStep.toFixed(3)}° per frame`);
+  assert.ok(differ > 60, 'the two ears sway out of phase');
+  for (const side of ['left', 'right'] as const) {
+    assert.ok(Math.abs(swayAngle(1, side) - swayAngle(0, side)) < 1e-9);
+    const end = swayAngle(1, side) - swayAngle(179 / 180, side), start = swayAngle(1 / 180, side) - swayAngle(0, side);
+    assert.ok(Math.abs(end - start) < 0.01, 'same speed across the loop seam');
+  }
+});
+
+test('approved Cat Ears 1.0.0 stays frozen in releases/cat-ears/1.0.0/ (not overwritten by 1.1.0)', () => {
+  const rel = join(ROOT, 'releases/cat-ears/1.0.0');
+  // inside a standalone release copy there is no releases/ folder: nothing to check there
+  if (!existsSync(rel)) return;
+  assert.equal(sha256(readFileSync(join(rel, 'dist/index.js'))), 'b3ad018aaeccfa4fcbd83d0fae76788b4b50ab59ed6e2224c74ba879152738c4');
+  assert.equal(sha256(readFileSync(join(rel, 'src/decorations/cat-ears/component/motion.ts'))), 'e331ed4babb13c3df57d179d015d8f7921227f6aaca0701645dc31206ca1f20f');
+});
+
+test('approved Cat Ears 1.1.0 is unchanged (markup and every attribute of both ears in all 180 frames)', () => {
   // If this fails, the look or the motion changed. That needs the owner's
   // approval and a new version — not a new fingerprint.
   assert.equal(CAT_EARS_META.id, 'cat-ears');
-  assert.equal(CAT_EARS_META.version, '1.0.0');
+  assert.equal(CAT_EARS_META.version, '1.1.0');
   assert.equal(CAT_EARS_META.status.tgs, 'not-exported');
-  assert.equal(sha256(renderCatEarsSvg('t-')), '11c3d3c79f9eef404d5ace20725851f85095cca08c1cf750e2aa0563b8e79318');
+  assert.equal(sha256(renderCatEarsSvg('t-')), '799a776fa94ab0ca1963671161d092be2b92d108f2b183c998bc5bb80706bd84');
   const frames: string[] = [];
-  for (let f = 0; f < 180; f++) {
-    const t = earTransforms(f / 180);
-    frames.push(`${t['swing-left']}|${t['swing-right']}`);
-  }
-  assert.equal(sha256(frames.join('\n')), '27793ba527b0c6603d9fe3cccf437fb809623b7cedf9111f51fcec77360de6e7');
+  for (let f = 0; f < FRAME_COUNT; f++) frames.push(JSON.stringify(earFrame(f / FRAME_COUNT)));
+  assert.equal(sha256(frames.join('\n')), 'bcaf76da767df35ab1094fa32d02fbedc0d2c3300bd461a65c8d5ef19c1047f6');
 });

@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|---|
 | Halloween Pumpkin | `halloween-pumpkin` | `src/decorations/halloween-pumpkin/` | `releases/halloween-pumpkin/1.0.0/` | `mountHalloweenPumpkin()` | утверждена 28.10.2026 | не экспортирован |
 | Ghost Orbit | `ghost-orbit` | `src/decorations/ghost-orbit/` | `releases/ghost-orbit/1.0.0/` | `mountGhostOrbit()` | утверждена 28.10.2026 | не экспортирован |
-| Cat Ears | `cat-ears` | `src/decorations/cat-ears/` | `releases/cat-ears/1.0.0/` | `mountCatEars()` | утверждена 30.10.2026 | не экспортирован |
+| Cat Ears | `cat-ears` | `src/decorations/cat-ears/` | `releases/cat-ears/1.1.0/` (актуальная); `releases/cat-ears/1.0.0/` (предыдущая, доступна) | `mountCatEars()` | 1.1.0 и 1.0.0 утверждены 30.10.2026 | не экспортирован |
 | Paper Plane Orbit | `paper-plane-orbit` | `src/decorations/paper-plane-orbit/` | `releases/paper-plane-orbit/1.0.0/` | `mountPaperPlaneOrbit()` | утверждена 30.10.2026 | не экспортирован |
 | Christmas Lights | `christmas-lights` | `src/decorations/christmas-lights/` | `releases/christmas-lights/1.0.0/` | `mountChristmasLights()` | утверждена 30.10.2026 | не экспортирован |
 
@@ -33,7 +33,7 @@ avatar-decorations/
 │   │   │   └── README.md, STATUS.md
 │   │   ├── cat-ears/
 │   │   │   ├── assets/              оригинальный SVG ear + sources.generated.ts
-│   │   │   ├── component/           раскладка, покачивание (motion.ts), сборка SVG, класс компонента
+│   │   │   ├── component/           раскладка, изгиб кончиков и покачивание ушек (motion.ts), сборка SVG, класс компонента
 │   │   │   ├── index.ts             публичный интерфейс
 │   │   │   └── README.md, STATUS.md
 │   │   ├── paper-plane-orbit/
@@ -56,7 +56,8 @@ avatar-decorations/
 ├── releases/                        утверждённые версии, только чтение
 │   ├── halloween-pumpkin/1.0.0/     готовый пакет: dist/, исходники, тесты, документация
 │   ├── ghost-orbit/1.0.0/           готовый пакет Ghost Orbit
-│   ├── cat-ears/1.0.0/              готовый пакет Cat Ears
+│   ├── cat-ears/1.1.0/              готовый пакет Cat Ears (актуальная версия)
+│   ├── cat-ears/1.0.0/              готовый пакет Cat Ears (предыдущая версия)
 │   ├── paper-plane-orbit/1.0.0/     готовый пакет Paper Plane Orbit
 │   └── christmas-lights/1.0.0/      готовый пакет Christmas Lights
 ├── tests/                           автотесты (npm test)
@@ -112,7 +113,7 @@ const pumpkin = mountHalloweenPumpkin(element, { size: 128 });
 import { mountGhostOrbit } from '@avatar-decorations/ghost-orbit';
 const ghosts = mountGhostOrbit(element, { size: 128 });
 
-// releases/cat-ears/1.0.0/
+// releases/cat-ears/1.1.0/ (предыдущая 1.0.0 — releases/cat-ears/1.0.0/)
 import { mountCatEars } from '@avatar-decorations/cat-ears';
 const ears = mountCatEars(element, { size: 128 });
 

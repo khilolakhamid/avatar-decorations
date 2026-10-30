@@ -3,14 +3,14 @@
  * Draws only the two ears on a transparent background; the user's photo
  * is placed underneath by the host page (see AVATAR_AREA).
  *
- * Animation: a seamless 3-second loop. Every frame both ears' turns are
- * recomputed from the loop progress (component/composition.ts →
- * earTransforms), so the drawing at any moment is exactly the static
- * drawing renderCatEarsSvg(…, progress) for that moment.
+ * Animation: a seamless 3-second loop. Every frame the bend of both ears
+ * (the points of every part of each ear) is recomputed from the loop
+ * progress (component/composition.ts → earFrame), so the drawing at any
+ * moment is exactly the static drawing renderCatEarsSvg(…, progress).
  */
 import { uniquePrefix } from '../../../shared/svg';
 import { ASSET_SOURCES } from '../assets';
-import { buildCatEarsSvg, EAR_PARTS, earTransforms, type EarPart } from './composition';
+import { buildCatEarsSvg, earFrame } from './composition';
 
 /** Loop: strictly 3 s = 180 frames at 60 fps. */
 export const LOOP_DURATION_MS = 3000;
@@ -36,7 +36,7 @@ export class CatEarsDecoration {
   private phase = 0;
   private lastTime: number | null = null;
   private rafId = 0;
-  private readonly parts = {} as Record<EarPart, SVGGElement>;
+  private readonly parts = new Map<string, Element>();
 
   constructor(container: Element, options: CatEarsOptions = {}) {
     const { size = '100%', visible = true, autoplay = true, className, speed = 1 } = options;
@@ -50,7 +50,7 @@ export class CatEarsDecoration {
     this.element.style.pointerEvents = 'none';
     this.element.style.background = 'transparent';
     if (className) this.element.setAttribute('class', className);
-    for (const p of EAR_PARTS) this.parts[p] = this.element.querySelector(`[data-part="${p}"]`) as SVGGElement;
+    this.element.querySelectorAll('[data-part]').forEach((el) => this.parts.set(el.getAttribute('data-part')!, el));
     this.setSize(size);
     this.setVisible(visible);
     container.appendChild(this.element);
@@ -118,8 +118,11 @@ export class CatEarsDecoration {
   };
 
   private render(): void {
-    const t = earTransforms(this.phase);
-    for (const k of EAR_PARTS) this.parts[k].setAttribute('transform', t[k]);
+    const frame = earFrame(this.phase);
+    for (const [part, attrs] of Object.entries(frame)) {
+      const el = this.parts.get(part);
+      if (el) for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    }
   }
 }
 
