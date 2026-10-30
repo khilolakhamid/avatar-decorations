@@ -10,6 +10,7 @@
 | Ghost Orbit | `ghost-orbit` | `src/decorations/ghost-orbit/` | `releases/ghost-orbit/1.0.0/` | `mountGhostOrbit()` | утверждена 28.10.2026 | не экспортирован |
 | Cat Ears | `cat-ears` | `src/decorations/cat-ears/` | `releases/cat-ears/1.0.0/` | `mountCatEars()` | утверждена 30.10.2026 | не экспортирован |
 | Paper Plane Orbit | `paper-plane-orbit` | `src/decorations/paper-plane-orbit/` | `releases/paper-plane-orbit/1.0.0/` | `mountPaperPlaneOrbit()` | утверждена 30.10.2026 | не экспортирован |
+| Christmas Lights | `christmas-lights` | `src/decorations/christmas-lights/` | `releases/christmas-lights/1.0.0/` | `mountChristmasLights()` | утверждена 30.10.2026 | не экспортирован |
 
 Декорации полностью независимы: у каждой свои векторы, анимация, тесты и выпуск. Ни одна не импортирует другую, и каждую можно подключить без остальных.
 
@@ -35,24 +36,31 @@ avatar-decorations/
 │   │   │   ├── component/           раскладка, покачивание (motion.ts), сборка SVG, класс компонента
 │   │   │   ├── index.ts             публичный интерфейс
 │   │   │   └── README.md, STATUS.md
-│   │   └── paper-plane-orbit/
-│   │       ├── assets/              оригинальные SVG paper_plane_1/2/3 + sources.generated.ts
-│   │       ├── component/           полёт (motion.ts), повороты между рисунками, сборка SVG, класс компонента
+│   │   ├── paper-plane-orbit/
+│   │   │   ├── assets/              оригинальные SVG paper_plane_1/2/3 + sources.generated.ts
+│   │   │   ├── component/           полёт (motion.ts), повороты между рисунками, сборка SVG, класс компонента
+│   │   │   ├── index.ts             публичный интерфейс
+│   │   │   └── README.md, STATUS.md
+│   │   └── christmas-lights/
+│   │       ├── assets/              оригинальные SVG lights_1/2 + sources.generated.ts
+│   │       ├── component/           сопоставление рисунков (garlandModel.ts), движение и свет (motion.ts), сборка SVG, класс компонента
 │   │       ├── index.ts             публичный интерфейс
 │   │       └── README.md, STATUS.md
 │   ├── shared/                      общий движок анимации и SVG-инструменты
 │   ├── demo/                        демо-страницы разработчика (серый аватар, кнопки) — не входят в компоненты
 │   │   ├── ghost-orbit/             демо Ghost Orbit (корень demo/ — Halloween Pumpkin)
 │   │   ├── cat-ears/                демо Cat Ears (можно загрузить своё фото)
-│   │   └── paper-plane-orbit/       демо Paper Plane Orbit (можно загрузить своё фото)
+│   │   ├── paper-plane-orbit/       демо Paper Plane Orbit (можно загрузить своё фото)
+│   │   └── christmas-lights/        демо Christmas Lights (можно загрузить своё фото)
 │   └── types/                       типы для .jpg и .png (только демо)
 ├── releases/                        утверждённые версии, только чтение
 │   ├── halloween-pumpkin/1.0.0/     готовый пакет: dist/, исходники, тесты, документация
 │   ├── ghost-orbit/1.0.0/           готовый пакет Ghost Orbit
 │   ├── cat-ears/1.0.0/              готовый пакет Cat Ears
-│   └── paper-plane-orbit/1.0.0/     готовый пакет Paper Plane Orbit
+│   ├── paper-plane-orbit/1.0.0/     готовый пакет Paper Plane Orbit
+│   └── christmas-lights/1.0.0/      готовый пакет Christmas Lights
 ├── tests/                           автотесты (npm test)
-├── reference/                       материалы: референсы композиций (Halloween Pumpkin, cat-ears/, paper-plane-orbit/), требования TGS
+├── reference/                       материалы: референсы композиций (Halloween Pumpkin, cat-ears/, paper-plane-orbit/, christmas-lights/), требования TGS
 ├── scripts/                         сборка, встраивание SVG, тесты, выпуск версий
 ├── package.json, tsconfig*.json     настройки сборки
 └── .gitignore, .gitattributes
@@ -66,7 +74,7 @@ avatar-decorations/
 
 ```bash
 npm install                                  # esbuild и TypeScript, только для разработки
-npm run dev                                  # демо: http://localhost:5173 (Halloween Pumpkin), /ghost-orbit, /cat-ears, /paper-plane-orbit
+npm run dev                                  # демо: http://localhost:5173 (Halloween Pumpkin), /ghost-orbit, /cat-ears, /paper-plane-orbit, /christmas-lights
 npm run build                                # dist/<id>/index.js для каждой декорации + демо-страницы
 npm test                                     # автотесты
 npm run typecheck                            # проверка типов
@@ -89,7 +97,7 @@ npm run release -- <id-декорации>            # выпуск утвер�
 3. Добавить анимацию (`animation/timeline.ts`), тесты (`tests/<id>.test.ts`), документацию.
 4. После утверждения: версия `1.0.0` в `index.ts`, `npm run release -- <id>`, коммит.
 
-Готовые декорации при этом не меняются: у каждой своя папка, а утверждённый выпуск хранит собственную копию общего кода. Так были добавлены Ghost Orbit, Cat Ears и Paper Plane Orbit: предыдущие декорации и их выпуски не затронуты.
+Готовые декорации при этом не меняются: у каждой своя папка, а утверждённый выпуск хранит собственную копию общего кода. Так были добавлены Ghost Orbit, Cat Ears, Paper Plane Orbit и Christmas Lights: предыдущие декорации и их выпуски не затронуты.
 
 ## Подключение готового компонента (например, к маркету)
 
@@ -111,6 +119,10 @@ const ears = mountCatEars(element, { size: 128 });
 // releases/paper-plane-orbit/1.0.0/
 import { mountPaperPlaneOrbit } from '@avatar-decorations/paper-plane-orbit';
 const plane = mountPaperPlaneOrbit(element, { size: 128 });
+
+// releases/christmas-lights/1.0.0/
+import { mountChristmasLights } from '@avatar-decorations/christmas-lights';
+const lights = mountChristmasLights(element, { size: 128 });
 ```
 
 У всех одинаковый набор методов: `setSize`, `show`/`hide`, `play`/`pause`, `seek(кадр)`, `setSpeed`, `destroy`.
