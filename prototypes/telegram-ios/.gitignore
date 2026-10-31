@@ -1,0 +1,4 @@
+# Prototype build output, dependencies and local screenshots
+node_modules/
+dist/
+.screenshots/

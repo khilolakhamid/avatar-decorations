@@ -14,6 +14,10 @@
 
 Декорации полностью независимы: у каждой свои векторы, анимация, тесты и выпуск. Ни одна не импортирует другую, и каждую можно подключить без остальных.
 
+## Telegram iOS Prototype
+
+[`prototypes/telegram-ios/`](prototypes/telegram-ios/) is an interactive web prototype of the Telegram for iPhone profile screens (Settings, Edit Profile, Your Color) for trying on the decorations of this library. It has an infinite decoration carousel, Apply Style with saved choices, a sparkle effect and a selectable profile colour. It uses the approved release builds from `releases/` read-only and is a separate project with its own build and tests. This is a demonstration interface, not the official Telegram app. See its [README](prototypes/telegram-ios/README.md) for how to run it.
+
 ## Структура
 
 ```text
@@ -61,6 +65,7 @@ avatar-decorations/
 │   ├── paper-plane-orbit/1.0.0/     готовый пакет Paper Plane Orbit
 │   └── christmas-lights/1.0.0/      готовый пакет Christmas Lights
 ├── tests/                           автотесты (npm test)
+├── prototypes/telegram-ios/         Telegram iOS prototype (отдельный проект, см. его README)
 ├── reference/                       материалы: референсы композиций (Halloween Pumpkin, cat-ears/, paper-plane-orbit/, christmas-lights/), требования TGS
 ├── scripts/                         сборка, встраивание SVG, тесты, выпуск версий
 ├── package.json, tsconfig*.json     настройки сборки

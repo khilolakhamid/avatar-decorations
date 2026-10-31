@@ -1,0 +1,1548 @@
+/*
+ * Telegram iOS prototype — Settings screen.
+ * Every size, position and colour comes from reference/settings.figma.svg
+ * (frame 402 × 874). Comments name the Figma value where it is not obvious.
+ *
+ * Blend modes: the Figma file uses "plus darker" in several places (leaf
+ * pattern, glass button ink, selected-tab highlight). Only Safari supports
+ * `mix-blend-mode: plus-darker`, so other browsers get the colour that the
+ * blend produces over that exact background (formula: max(0, a + b − 1)).
+ * Both paths give the same picture.
+ */
+
+:root {
+  --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  --color-screen: #f2f2f7;
+  --color-card: #ffffff;
+  --color-label: #000000;
+  --color-separator: #e6e6e6;
+  --color-chevron: rgba(60, 60, 67, 0.3); /* #3C3C43 at 30 % */
+  --color-value: rgba(60, 60, 67, 0.6); /* #3C3C43 at 60 % */
+  --color-accent: #008bff;
+  --color-header: #9c68ce;
+  --color-tab-label: #1a1a1a;
+  --color-glyph: #f5f5f5;
+
+  /* Plus-darker results (see the note above) */
+  --color-pattern: #69359b; /* #CCCCCC plus-darker over #9C68CE */
+  --color-glass-ink: #0e0e0e; /* #1A1A1A plus-darker over the glass (#F3F3F3) */
+  --color-tab-highlight: #e1e1e1; /* #EDEDED plus-darker over the glass (#F3F3F3) */
+
+  /* Bottom of a trimmed text box = its baseline (see .text-trim). */
+  --baseline-shift: 0px;
+}
+
+@supports (mix-blend-mode: plus-darker) {
+  :root {
+    --color-pattern: #cccccc;
+    --color-glass-ink: #1a1a1a;
+    --color-tab-highlight: #ededed;
+    --blend-plus-darker: plus-darker;
+  }
+}
+
+/* Trimmed text: the box starts at the cap height and ends at the baseline,
+   so `bottom: N` puts the baseline exactly N above the parent's bottom edge
+   whatever font is used. Older browsers get an approximate shift instead. */
+@supports not (text-box: trim-both cap alphabetic) {
+  :root {
+    --baseline-shift: 0.21em;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: #d8d8de;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon {
+  display: block;
+  line-height: 0;
+}
+
+.icon svg {
+  display: block;
+  overflow: visible;
+}
+
+.text-trim,
+.profile-header__name,
+.profile-header__phone,
+.glass-button__text,
+.settings-row__title,
+.settings-row__value,
+.tab-bar__label {
+  text-box: trim-both cap alphabetic;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ───────────────────────── Display modes ───────────────────────── */
+
+.device-stage {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.device {
+  zoom: var(--frame-scale, 1);
+  padding: 14px;
+  border-radius: 69px;
+  background: #1c1c1e;
+  box-shadow:
+    0 0 0 1px #3a3a3c,
+    0 30px 80px rgba(0, 0, 0, 0.25);
+}
+
+.device__screen {
+  /* Figma frame and the iPhone 16 Pro safe areas it is drawn for */
+  --safe-top: 62px;
+  --safe-bottom: 34px;
+  --tabbar-bottom: 25px; /* 874 − 849 */
+  position: relative;
+  width: 402px;
+  height: 874px;
+  border-radius: 55px;
+  overflow: hidden;
+  background: var(--color-screen);
+}
+
+.device__island {
+  position: absolute;
+  z-index: 21;
+  top: 11px;
+  left: 50%;
+  width: 126px;
+  height: 37px;
+  margin-left: -63px;
+  border-radius: 18.5px;
+  background: #000;
+  pointer-events: none;
+}
+
+.device-viewport {
+  --safe-top: max(env(safe-area-inset-top), 16px);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --tabbar-bottom: max(calc(env(safe-area-inset-bottom) - 9px), 16px);
+  position: fixed;
+  inset: 0;
+  background: var(--color-screen);
+}
+
+/* ───────────────────────── Status bar (preview only) ───────────────────────── */
+
+.status-bar {
+  position: absolute;
+  z-index: 20;
+  top: 11px;
+  left: 0;
+  right: 0;
+  height: 37px;
+  display: flex;
+  justify-content: space-between;
+  color: color-mix(in srgb, #000 calc(var(--header-collapse, 0) * 100%), #fff);
+  pointer-events: none;
+}
+
+.status-bar__leading,
+.status-bar__trailing {
+  width: 138px; /* (402 − 126) / 2: space beside the Dynamic Island */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-bar__leading {
+  padding-right: 10px;
+}
+
+.status-bar__trailing {
+  gap: 6px;
+  padding-right: 12px;
+}
+
+.status-bar__time {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.status-bar__icon svg {
+  display: block;
+}
+
+/* ───────────────────────── Screen ───────────────────────── */
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-screen);
+  font-family: var(--font-ui);
+  color: var(--color-label);
+}
+
+.screen__scroll {
+  position: absolute;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+
+.screen__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Always tall enough for the header to collapse fully (156 pt of scroll),
+   even while the list is short. */
+.screen__content {
+  min-height: calc(100% + 156px);
+}
+
+/* Figma: backdrop blur 30 over the lowest 102 pt, faded out towards the top */
+.screen__bottom-blur {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(68px + var(--safe-bottom));
+  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px);
+  -webkit-mask-image: linear-gradient(to top, #000, transparent);
+  mask-image: linear-gradient(to top, #000, transparent);
+  pointer-events: none;
+}
+
+/* ───────────────────────── Glass surfaces ───────────────────────── */
+
+.glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  isolation: isolate;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12); /* drop shadow: y 8, blur 20σ, 12 % */
+  pointer-events: none;
+}
+
+.glass__layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.glass__layer--base {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.glass__layer--burn {
+  background: #dddddd;
+  mix-blend-mode: color-burn;
+}
+
+.glass__layer--darken {
+  background: #f7f7f7;
+  mix-blend-mode: darken;
+}
+
+.glass-button {
+  position: absolute;
+  display: block;
+  height: 44px;
+  border-radius: 22px;
+  color: var(--color-glass-ink);
+}
+
+.glass-button > .icon,
+.glass-button__text {
+  position: absolute;
+  mix-blend-mode: var(--blend-plus-darker, normal);
+}
+
+.glass-button__text {
+  left: 0;
+  right: 0;
+  bottom: calc(16px - var(--baseline-shift)); /* baseline 28 below the top of a 44 button */
+  font-size: 17px;
+  font-weight: 400;
+  text-align: center;
+}
+
+/* ───────────────────────── Profile header ───────────────────────── */
+
+/*
+ * The header is pinned over the scrolling list and collapses as the list
+ * scrolls (timeline in ProfileHeader.ts). JavaScript only writes numbers:
+ *   --collapse-s        0…156  how much the purple area has shrunk
+ *   --collapse-shift    0…     scroll offset, for things that ride with the content
+ *   --collapse-name-y   0…141  how far the name has moved up
+ *   --collapse-name-k   1…0.607 name scale (28 pt → 17 pt)
+ *   --collapse-name-p   0…1    name progress (star fades, name re-centres)
+ *   --collapse-color    0…1    purple → light bar, white → black text
+ *   --collapse-avatar-o / -k, --collapse-phone-o   fades and avatar scale
+ * Everything has a default, so without JavaScript the header is expanded.
+ */
+.profile-header-spacer {
+  height: calc(var(--safe-top) + 206px); /* 268 in the Figma frame */
+}
+
+.profile-header {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--safe-top) + 206px);
+  pointer-events: none;
+}
+
+.profile-header .glass-button {
+  pointer-events: auto;
+}
+
+/* Collapsed bar: progressive blur of the cards passing underneath
+   (same effect as the Figma blur behind the tab bar, mirrored).
+   Lives next to the header, not inside it (see ProfileHeader.ts). */
+.profile-header__bar-blur {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--safe-top) + 72px);
+  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 46px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 46px), transparent 100%);
+  opacity: var(--collapse-color, 0);
+  pointer-events: none; /* never blocks taps, wheel or touch scrolling */
+}
+
+.profile-header__surface {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--safe-top) + 206px - var(--collapse-s, 0) * 1px);
+  overflow: hidden;
+}
+
+.profile-header__color {
+  position: absolute;
+  inset: 0;
+  background: var(--profile-header, var(--color-header)); /* selected profile colour (profileTheme.ts) */
+  opacity: calc(1 - var(--collapse-color, 0));
+}
+
+.profile-header__pattern {
+  position: absolute;
+  top: calc(var(--safe-top) - 62px);
+  left: 50%;
+  width: 402px;
+  height: 268px;
+  margin-left: -201px;
+  color: var(--color-pattern);
+  mix-blend-mode: var(--blend-plus-darker, normal);
+  transform: translateY(calc(var(--collapse-shift, 0) * -1px));
+  opacity: calc(1 - var(--collapse-color, 0));
+  pointer-events: none;
+}
+
+.profile-header__pattern svg {
+  display: block;
+}
+
+/* Collapse: each leaf is drawn towards the avatar centre (--dx/--dy, set in
+   ProfileHeader.ts), shrinks around its own centre and fades out. */
+.profile-header__pattern .pattern-leaf {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translate(
+      calc(var(--dx, 0) * var(--collapse-leaf-m, 0) * 1px),
+      calc(var(--dy, 0) * var(--collapse-leaf-m, 0) * 1px)
+    )
+    scale(var(--collapse-leaf-k, 1));
+  /* --leaf-base: the leaf's own paleness from the reference (layout/headerLeaves.ts) */
+  opacity: calc(var(--leaf-base, 1) * var(--collapse-leaf-o, 1));
+}
+
+.profile-header__qr {
+  top: var(--safe-top);
+  left: 16px;
+  width: 44px;
+}
+
+.profile-header__qr > .icon {
+  left: 11.008px;
+  top: 10.758px;
+}
+
+/* Search: same glass circle as QR, 12 pt left of Edit (as in the Telegram
+   reference). Icon: the search glyph from the Figma file. */
+.profile-header__search {
+  top: var(--safe-top);
+  right: 83px; /* 16 + 55 (Edit) + 12 */
+  width: 44px;
+}
+
+.profile-header__search > .icon {
+  left: 11.434px;
+  top: 10.845px;
+}
+
+.profile-header__edit {
+  top: var(--safe-top);
+  right: 16px;
+  width: 55px; /* Telegram reference: 55 × 44 capsule */
+}
+
+/* ── Liquid glass on the purple header (Telegram reference screenshot) ──
+   Measured on the reference (3×): QR and Search 44 pt circles, Edit a
+   55 × 44 capsule, 12 pt apart, 16 pt from the edges. Inside: the header
+   purple seen through the glass, ~10 % lighter, uniform. Edge: a ~1 pt
+   bright lavender rim, brightest on the outer third, the same all round
+   (that rim is the light catch). Shadow: soft, slightly downward, darkens
+   the purple by ~8 % below and ~5 % beside, gone after ~7 pt. White ink.
+   As the header collapses into the light bar (--collapse-color 0 → 1) this
+   glass crossfades into the light Figma glass and the ink turns dark. */
+.profile-header .glass-button {
+  --purple-glass: calc(1 - var(--collapse-color, 0));
+  color: color-mix(in srgb, #fff calc(var(--purple-glass) * 100%), var(--color-glass-ink));
+  transition: transform 0.16s ease;
+}
+
+.profile-header .glass-button > .icon,
+.profile-header .glass-button .glass-button__text {
+  mix-blend-mode: normal;
+}
+
+.profile-header .glass {
+  box-shadow:
+    0 4px 18px rgba(35, 10, 75, calc(0.2 * var(--purple-glass))),
+    0 8px 40px rgba(0, 0, 0, calc(0.12 * var(--collapse-color, 0)));
+}
+
+.profile-header .glass__layer {
+  opacity: var(--collapse-color, 0);
+}
+
+/* Glass body: the header behind it, softly blurred (leaves), a touch lighter.
+   Drawn on the button itself, not inside .glass: .glass is an isolated group
+   (for the Figma blend layers) and a backdrop blur inside it would not see the
+   header. ::after is the rim, above the glass, around (not over) the ink. */
+.profile-header .glass-button::before,
+.profile-header .glass-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: var(--purple-glass);
+  pointer-events: none;
+}
+
+.profile-header .glass-button::before {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Rim: three thirds of a point, outer → inner (#E5C1FF, #D5AAF3, #C697E5 over
+   the header purple, like the reference's 226/208/189 steps). */
+.profile-header .glass-button::after {
+  box-shadow:
+    inset 0 0 0 0.333px var(--glass-rim-1, #e5c1ff),
+    inset 0 0 0 0.667px var(--glass-rim-2, #d5aaf3),
+    inset 0 0 0 1px var(--glass-rim-3, #c697e5);
+}
+
+/* Press: the glass dims a little and gives slightly, no flash. */
+.profile-header .glass-button:active {
+  transform: scale(0.96);
+}
+
+.profile-header .glass-button:active::before {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-header .glass-button {
+    transition: none;
+  }
+}
+
+/* Name: its bottom edge is the baseline (trimmed text). Expanded baseline is
+   y 231 (safe top + 169); collapsed it is y 90, which centres the 17 pt
+   title on the buttons (y 84). Scaling happens around the baseline. */
+.profile-header__name-row {
+  --name-dx: calc(12.5px * var(--collapse-name-k, 1) * var(--collapse-name-p, 0));
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 5px;
+  transform-origin: 50% 100%;
+  transform: translate(
+      var(--name-dx),
+      calc(var(--safe-top) + 169px + var(--baseline-shift) - var(--collapse-name-y, 0) * 1px - 100%)
+    )
+    scale(var(--collapse-name-k, 1));
+  color: color-mix(in srgb, #000 calc(var(--collapse-color, 0) * 100%), #fff);
+  pointer-events: none;
+}
+
+.profile-header__name {
+  max-width: 300px;
+  margin: 0;
+  overflow-x: clip;
+  text-overflow: ellipsis;
+  font-size: 28px;
+  font-weight: 700;
+  color: inherit;
+}
+
+.profile-header__star {
+  width: 20px;
+  height: 20px;
+  margin-bottom: calc(0px - var(--baseline-shift));
+  color: inherit;
+  opacity: calc(1 - var(--collapse-name-p, 0));
+}
+
+.profile-header__phone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 400;
+  text-align: center;
+  color: #999999;
+  mix-blend-mode: plus-lighter;
+  /* baseline at y 253 (safe top + 191), then rides with the content */
+  transform: translateY(calc(var(--safe-top) + 191px + var(--baseline-shift) - var(--collapse-shift, 0) * 1px - 100%));
+  opacity: var(--collapse-phone-o, 1);
+}
+
+/* ───────────────────────── Avatar ───────────────────────── */
+
+.avatar {
+  position: absolute;
+  top: calc(var(--safe-top) + 28px); /* y 90 in the Figma frame */
+  left: 50%;
+  width: 104px;
+  height: 104px;
+  margin-left: -52px;
+  /* Collapse: rises to the Dynamic Island, shrinks, blurs and darkens to black
+     (timeline in ProfileHeader.ts). The decoration layer inside follows it. */
+  transform: translateY(calc(var(--collapse-avatar-y, 0) * -1px)) scale(var(--collapse-avatar-k, 1));
+  filter: blur(calc(var(--collapse-avatar-blur, 0) * 1px)) brightness(var(--collapse-avatar-bright, 1));
+  opacity: var(--collapse-avatar-o, 1);
+}
+
+/* On a phone there is no drawn island to sink into: the avatar fades instead. */
+:root[data-mode='device'] .avatar {
+  opacity: var(--collapse-avatar-o-device, 1);
+}
+
+/* Liquid bridge to the Dynamic Island (preview frame only) */
+.profile-header__goo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 240px;
+  overflow: visible;
+  opacity: var(--collapse-bridge-o, 0);
+  pointer-events: none;
+}
+
+:root[data-mode='device'] .profile-header__goo {
+  display: none;
+}
+
+/* Figma: white drop shadow around the photo, blur σ 64, 70 %. A CSS
+   box-shadow this large renders blocky in Chromium, so the same glow is a
+   radial gradient whose stops are the exact profile of a 104 pt disc blurred
+   with σ 64 (computed numerically). */
+.avatar__glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 520px;
+  height: 520px;
+  margin: -260px 0 0 -260px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle closest-side,
+    rgba(255, 255, 255, 0.197) 0%,
+    rgba(255, 255, 255, 0.148) 20%,
+    rgba(255, 255, 255, 0.135) 23.1%,
+    rgba(255, 255, 255, 0.118) 26.9%,
+    rgba(255, 255, 255, 0.101) 30.8%,
+    rgba(255, 255, 255, 0.077) 36.5%,
+    rgba(255, 255, 255, 0.056) 42.3%,
+    rgba(255, 255, 255, 0.039) 48.1%,
+    rgba(255, 255, 255, 0.025) 53.8%,
+    rgba(255, 255, 255, 0.014) 61.5%,
+    rgba(255, 255, 255, 0.007) 69.2%,
+    rgba(255, 255, 255, 0.003) 76.9%,
+    rgba(255, 255, 255, 0.001) 84.6%,
+    rgba(255, 255, 255, 0) 92.3%
+  );
+  opacity: var(--collapse-glow-o, 1);
+  pointer-events: none;
+}
+
+.avatar__photo {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover; /* Figma pattern fill: image scaled to the height, centred */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Empty, transparent layer for a future animated decoration */
+.avatar__decoration {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--avatar-decoration-size, 104px);
+  height: var(--avatar-decoration-size, 104px);
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* ───────────────────────── Settings cards ───────────────────────── */
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px 16px calc(var(--tabbar-bottom) + 62px + 24px);
+}
+
+.settings-group {
+  overflow: hidden;
+  border-radius: 26px;
+  background: var(--color-card);
+}
+
+.settings-row {
+  /* Positions inside a row are relative to the card (which starts at x 16). */
+  --label-x: 62px; /* x 78 in the frame */
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 52px;
+}
+
+.settings-row--plain {
+  --label-x: 74px; /* x 90 in the frame */
+}
+
+.settings-row__separator {
+  position: absolute;
+  top: -1px;
+  left: var(--label-x);
+  right: 16px;
+  height: 1px;
+  background: var(--color-separator);
+}
+
+.settings-row__icon {
+  position: absolute;
+  color: var(--color-accent);
+}
+
+.settings-row__tile {
+  position: absolute;
+  left: 16px; /* x 32 in the frame */
+  top: 11px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0)),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2)),
+    var(--tile-color);
+}
+
+.settings-row__glyph {
+  position: absolute;
+  color: var(--color-glyph);
+  mix-blend-mode: plus-lighter;
+}
+
+.settings-row__title {
+  position: absolute;
+  left: var(--label-x);
+  right: 64px;
+  bottom: calc(20px - var(--baseline-shift)); /* baseline 32 below the row top */
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--color-label);
+}
+
+.settings-row__value {
+  position: absolute;
+  right: 40.5px;
+  bottom: calc(20px - var(--baseline-shift));
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--color-value);
+}
+
+.settings-row__chevron {
+  position: absolute;
+  right: 14.512px;
+  top: 20.055px;
+  color: var(--color-chevron);
+}
+
+/* ───────────────────────── Tab bar ───────────────────────── */
+
+.tab-bar {
+  position: absolute;
+  z-index: 10;
+  left: 25px;
+  right: 25px;
+  bottom: var(--tabbar-bottom);
+  height: 62px;
+  border-radius: 31px;
+}
+
+.tab-bar__items {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: 100%;
+}
+
+.tab-bar__tab {
+  position: relative;
+  display: block;
+  height: 100%;
+  color: var(--color-tab-label);
+}
+
+.tab-bar__tab.is-selected {
+  color: var(--color-accent);
+}
+
+.tab-bar__highlight {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 78px;
+  height: 56px;
+  margin-left: -39px;
+  border-radius: 28px;
+  background: var(--color-tab-highlight);
+  mix-blend-mode: var(--blend-plus-darker, normal);
+}
+
+.tab-bar__icon {
+  position: absolute;
+  top: 12.098px;
+  left: 0;
+  right: 0;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.tab-bar__image {
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.tab-bar__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(12px - var(--baseline-shift)); /* baseline 50 below the bar top */
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ───────────────────────── Screen stack (navigation) ───────────────────────── */
+
+.screen-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.stack-screen {
+  position: absolute;
+  inset: 0;
+  /* each screen is its own layer, so nothing of a lower screen (header, tab bar) shows through */
+  z-index: 0;
+  transition:
+    opacity 0.35s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.stack-screen.is-entering,
+.stack-screen.is-leaving {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-screen {
+    transition: none;
+  }
+}
+
+/* Edit Profile has a light top: dark status bar text in the preview frame */
+:root[data-active-screen='edit-profile'] .status-bar {
+  color: #000;
+}
+
+/* ───────────────────────── Edit Profile ───────────────────────── */
+
+/*
+ * Measured on the reference screenshots (393 × 852, safe top 59); vertical
+ * positions are reference y − 64 + safe top, so × and ✓ line up with the
+ * Settings buttons. Cards, rows, tiles, chevrons and type are the shared ones.
+ */
+.edit-profile__content {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px calc(var(--safe-bottom) + 10px);
+}
+
+.edit-profile__hero {
+  position: relative;
+  flex: none;
+  height: calc(var(--safe-top) + 160px); /* name card at reference y 224 */
+}
+
+.edit-profile__photo {
+  position: absolute;
+  top: calc(var(--safe-top) + 12px); /* reference y 76 */
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  margin-left: -50px;
+  border-radius: 50%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.edit-profile__change-photo {
+  position: absolute;
+  left: 50%;
+  bottom: calc(21.67px - var(--baseline-shift)); /* baseline at reference y 202.3 */
+  transform: translateX(-50%);
+  color: var(--color-accent);
+}
+
+.edit-profile__change-photo-text {
+  display: block;
+  font-size: 17px;
+  font-weight: 400;
+  text-box: trim-both cap alphabetic;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Footnotes under the cards: 13 pt, grey; cap top 9.7 below the card,
+   next card 54 below the card (70 for two lines). */
+.edit-footnote {
+  /* Fixed box (cap height + 16 per extra line) so the spacing is exact
+     whatever the font's cap height is. */
+  height: 9.2px;
+  margin: 9.67px 16px 35.13px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--color-value);
+  text-box: trim-both cap alphabetic;
+}
+
+.edit-footnote[data-lines='2'] {
+  height: 25.2px;
+}
+
+.edit-footnote__link {
+  display: inline;
+  color: var(--color-accent);
+}
+
+.edit-footnote__chevron {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  margin-left: 4px;
+  vertical-align: -1px;
+}
+
+/* Two cards in a row without a footnote between them (profile → Add Another
+   Account): the standard 24 pt card gap of the prototype. */
+.edit-profile__content > .settings-group + .settings-group {
+  margin-top: 24px;
+}
+
+/* Text fields */
+.edit-fields {
+  flex: none;
+}
+
+.edit-field {
+  display: block;
+  padding: 0 16px;
+}
+
+.edit-field__input {
+  display: block;
+  width: 100%;
+  height: 50px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--color-label);
+  caret-color: var(--color-accent);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.edit-field__input::placeholder {
+  color: rgba(60, 60, 67, 0.3);
+  opacity: 1;
+}
+
+/* Bio: first baseline at 31 like the one-line fields, grows with the text */
+.edit-field__input--multiline {
+  height: auto;
+  min-height: 50px;
+  padding: 14px 0;
+  line-height: 22px;
+  resize: none;
+  overflow: hidden;
+}
+
+.edit-fields__separator {
+  display: block;
+  height: calc(1px / 3);
+  margin: 0 16px calc(-1px / 3); /* drawn over the row edge: rows stay 50 + 50 */
+  position: relative;
+  background: #c8c7cb; /* hairline as in the reference */
+}
+
+/* Rows on this screen: hairline separators from x 76, values as in the reference */
+.screen--edit-profile .settings-row__separator {
+  top: calc(-1px / 3);
+  left: 60px;
+  height: calc(1px / 3);
+  background: #c8c7cb;
+}
+
+.screen--edit-profile .settings-row__value {
+  right: 35px;
+}
+
+.screen--edit-profile .settings-row--no-chevron .settings-row__value {
+  right: 17.5px;
+}
+
+.screen--edit-profile .settings-row__value--node {
+  right: 34px; /* circles end 34 before the card edge in the reference */
+}
+
+.settings-row__value--node {
+  bottom: auto;
+  top: 14px;
+  text-box: normal;
+  line-height: 0;
+}
+
+/* Edit Profile glyphs are the user's files with a blue fill: shown white on the tile */
+.screen--edit-profile .settings-row__glyph svg path {
+  fill: currentColor;
+}
+
+/* "Your Color": two 24 pt circles 18 pt apart, the front one with a 2 pt white ring */
+.color-circles {
+  position: relative;
+  display: block;
+  width: 42px;
+  height: 24px;
+}
+
+.color-circles__a,
+.color-circles__b {
+  position: absolute;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.color-circles__a {
+  left: 0;
+  background: var(--color-circle-a, #8d5fd4); /* selected profile colour (profileTheme.ts) */
+}
+
+.color-circles__b {
+  left: 18px;
+  background: var(--color-circle-b, #996ed8);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* Centred action cards (Add Another Account, Log Out) */
+.edit-action {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 52px;
+}
+
+.edit-action__text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(20px - var(--baseline-shift));
+  font-size: 17px;
+  font-weight: 400;
+  text-align: center;
+  text-box: trim-both cap alphabetic;
+  line-height: 1;
+}
+
+.edit-action--accent {
+  color: var(--color-accent);
+}
+
+.edit-action--danger {
+  color: #ff3b30;
+}
+
+/* Top bar: × and ✓ stay put while the content scrolls under the blur */
+.edit-profile__bar {
+  position: absolute;
+  z-index: 7;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+}
+
+.edit-profile__close {
+  top: var(--safe-top);
+  left: 16px;
+  width: 44px;
+}
+
+.edit-profile__close > .icon {
+  left: 13px;
+  top: 13px;
+}
+
+.edit-profile__done {
+  position: absolute;
+  top: var(--safe-top);
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: #3a84f4; /* sampled from the reference */
+  color: #fff;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+}
+
+.edit-profile__done-icon {
+  position: absolute;
+  left: 11.5px;
+  top: 13px;
+}
+
+/* ───────────────────────── Your Color ───────────────────────── */
+
+/*
+ * Measured on the reference screenshot (393 × 852); vertical positions are
+ * reference y − 64 + safe top, like Edit Profile. Reuses cards, rows, footnotes,
+ * action cards, glass buttons and the avatar component.
+ */
+:root[data-active-screen='your-color'] .status-bar {
+  color: #000;
+}
+
+.your-color__content {
+  display: flex;
+  flex-direction: column;
+  /* card at reference y 126; bottom: room for the Apply Style button */
+  padding: calc(var(--safe-top) + 62px) 16px calc(var(--safe-bottom) + 84px);
+}
+
+.color-card {
+  flex: none;
+}
+
+/* Preview: profile colour (set from the selected swatch), avatar, name ★, online */
+.color-preview {
+  position: relative;
+  height: 253.33px;
+  overflow: hidden;
+  background: #8e6cc2;
+}
+
+/* Background leaves (LeafPattern, same as the Settings header). The pattern
+   box is placed so its avatar point (201, 142) is on this avatar's centre
+   (card x 50 %, y 104): the composition sits around the avatar and the name
+   as on Settings. Behind the avatar, name and decorations. */
+.color-preview__pattern {
+  position: absolute;
+  left: calc(50% - 201px);
+  top: calc(104px - 142px);
+  width: 402px;
+  height: 268px;
+  color: var(--preview-pattern, #5b398f); /* #CCCCCC plus-darker over the card colour */
+  mix-blend-mode: var(--blend-plus-darker, normal);
+  pointer-events: none;
+}
+
+@supports (mix-blend-mode: plus-darker) {
+  .color-preview__pattern {
+    color: #cccccc;
+  }
+}
+
+.color-preview__pattern svg {
+  display: block;
+}
+
+.color-preview__pattern .pattern-leaf {
+  opacity: var(--leaf-base, 1);
+}
+
+.color-preview .avatar {
+  top: 52px; /* reference y 178 */
+}
+
+.color-preview__name-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(63.67px - var(--baseline-shift)); /* name baseline at reference y 315.7 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 5px;
+  color: #fff;
+  pointer-events: none;
+}
+
+.color-preview__name {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  text-box: trim-both cap alphabetic;
+}
+
+.color-preview__star {
+  width: 20px;
+  height: 20px;
+  margin-bottom: calc(0px - var(--baseline-shift));
+  color: #fff;
+}
+
+.color-preview__status {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(34px - var(--baseline-shift)); /* baseline at reference y 345.3 */
+  margin: 0;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  text-box: trim-both cap alphabetic;
+  color: #c19bf8;
+}
+
+/* Palette: the user's SVG (334 × 74) unchanged, centred, 14 above and below */
+.color-palette {
+  position: relative;
+  width: 334px;
+  height: 74px;
+  margin: 14px auto;
+}
+
+.color-palette__art,
+.color-palette__art svg {
+  display: block;
+}
+
+.color-swatch {
+  position: absolute;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.color-swatch:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Selected: the swatch's own colour shows as a 2.25 pt ring, then a white gap
+   (reference: 2 + 2 around a 24 pt centre on a 32 pt circle) */
+.color-swatch.is-selected {
+  border: 2.25px solid transparent;
+  box-shadow: inset 0 0 0 2.25px #fff;
+}
+
+.color-row {
+  --label-x: 16px;
+}
+
+/* Maple leaf before the chevron (user's Maple.svg, 28 × 28, shown at 24 pt,
+   centred on the row like the chevron; ~8 pt gap to the chevron). Blue
+   #008BFF (user's colour); the file itself keeps its own fill, only the
+   displayed colour is overridden. */
+.color-row__icon {
+  position: absolute;
+  right: 30px;
+  top: 14px;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+.color-row__icon svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.color-row__icon path {
+  fill: #008bff;
+}
+
+.color-row__separator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 16px;
+  height: calc(1px / 3);
+  background: #c8c7cb;
+}
+
+.edit-action--start .edit-action__text {
+  left: 16px;
+  text-align: left;
+}
+
+/* Back button and the Profile | Name control */
+.your-color__back {
+  top: var(--safe-top);
+  left: 16px;
+  width: 44px;
+}
+
+.your-color__back > .icon {
+  left: 15.5px;
+  top: 12.5px;
+}
+
+.segmented {
+  position: absolute;
+  top: var(--safe-top);
+  left: 50%;
+  width: 157px;
+  height: 44px;
+  margin-left: -78.5px;
+  border-radius: 22px;
+}
+
+.segmented__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 78px;
+  height: 38px;
+  border-radius: 19px;
+  background: var(--color-tab-highlight);
+  mix-blend-mode: var(--blend-plus-darker, normal);
+}
+
+.segmented__item {
+  position: absolute;
+  top: 0;
+  height: 44px;
+  color: #000;
+}
+
+.segmented__item:first-of-type {
+  left: 3px;
+  width: 78px;
+}
+
+.segmented__item:last-of-type {
+  left: 81px;
+  width: 73px;
+}
+
+.segmented__text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(16.67px - var(--baseline-shift)); /* baseline 27.3 below the top */
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  text-box: trim-both cap alphabetic;
+}
+
+/* ───────────────────────── Avatar decorations (try-on) ───────────────────────── */
+
+/* The live decoration on the avatar: its 512 canvas is sized so the photo
+   circle (r 218) matches the 104 pt photo → 122.13 pt (set from JS). */
+/* Decoration try-on (DecorationCarousel). The decorations are drawn on
+   .deco-stage above the avatar; each one is a 512 × 512 canvas moved and
+   scaled as a whole. .deco-carousel is the hit / focus box of the small
+   preview on the right (position and narrow-phone scale set in JS). */
+.color-preview {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.deco-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.deco-holder {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 512px;
+  height: 512px;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.deco-carousel {
+  position: absolute;
+  top: 46px;
+  left: min(calc(50% + 63px), calc(100% - 122px));
+  width: 94px; /* set from the slot size in JS */
+  height: 94px;
+  border-radius: 20px;
+  transform-origin: 0 50%;
+  cursor: grab;
+  outline: none;
+  z-index: 2;
+}
+
+.deco-carousel:active {
+  cursor: grabbing;
+}
+
+.deco-carousel:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ───────────────────────── Apply Style ─────────────────────────
+   Telegram iOS style: a pill pinned above the home indicator (user's
+   reference), blue #008BFF (user's colour). Shown only while the decoration
+   differs from the saved one; tapping it saves and returns to Settings. */
+.apply-bar {
+  position: absolute;
+  left: 36px;
+  right: 36px;
+  bottom: calc(var(--safe-bottom) + 8px);
+  z-index: 3;
+  pointer-events: none;
+  /* Hidden until the decoration differs from the saved one (YourColorScreen). */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px);
+  transition:
+    opacity 0.24s ease,
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1),
+    visibility 0s linear 0.28s;
+}
+
+.apply-bar.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition:
+    opacity 0.24s ease,
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1),
+    visibility 0s;
+}
+
+.apply-style {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  border: 0;
+  border-radius: 26px;
+  background: #008bff;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.28),
+    0 8px 24px rgba(0, 0, 0, 0.14);
+  color: #fff;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.apply-style:active {
+  transform: scale(0.97);
+  filter: brightness(0.92);
+}
+
+.apply-style:focus-visible {
+  outline: 2px solid #008bff;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apply-style,
+  .apply-bar {
+    transition: none;
+  }
+}
+
+/* ───────────────────────── Sparkle burst (SparkleEffect.ts) ─────────────────────────
+   Decorative layer over the decorations; never catches taps or swipes. */
+.sparkle-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  opacity: 0;
+  filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+  animation: sparkle-pop var(--t, 1120ms) linear var(--d, 0ms) both;
+  will-change: transform, opacity;
+}
+
+.sparkle svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 1120 ms: in 0–320 (29 %), shine 320–600 (29–54 %, soft pulse), out 600–1120. */
+@keyframes sparkle-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-18deg);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  29% {
+    opacity: var(--o, 1);
+    transform: scale(1.06) rotate(0deg);
+    animation-timing-function: ease-in-out;
+  }
+  41% {
+    opacity: calc(var(--o, 1) * 0.78);
+    transform: scale(0.98) rotate(4deg);
+    animation-timing-function: ease-in-out;
+  }
+  54% {
+    opacity: var(--o, 1);
+    transform: scale(1) rotate(7deg);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.6, 1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.35) rotate(20deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkle-layer {
+    display: none;
+  }
+}
